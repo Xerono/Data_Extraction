@@ -1,0 +1,26 @@
+Attentions: 
+	6 (Layer)
+		1 (Batch Size)
+			12 (Heads)
+				148 (Tokens Left)
+					148 (Tokens Right)
+						1 (Float)
+										
+AddDict:
+	6 (Layer)
+		12 (Head)
+			148 (Tokens Left)
+				148 (Tokens Right)
+					1 (Float)
+					
+cls:
+	6 (Layer)
+		12 (Head)
+			148 (Tokens Left)
+				1 (Float) (Target CLS)
+				
+soh
+	6 (Layer)
+		148 (Tokens Left)
+			1 (Float) (Summe CLS über Heads je Layer)
+			
