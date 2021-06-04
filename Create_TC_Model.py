@@ -6,7 +6,7 @@ import random
 randomseed = "Randomseed"
 TrainTestRatio = 70
 NumOfEpochs = 3
-Batch_Size_Train = 1
+Batch_Size_Train = 8
 
 CurDir = os.getcwd()
 FakeDataFile = open(CurDir + "/Files/FakeData.pickle", "rb")
@@ -76,8 +76,8 @@ Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-Training_Data = Tokenizer(Training_Data_ne)#, padding = True)
-Test_Data = Tokenizer(Test_Data_ne)#, padding = True)
+Training_Data = Tokenizer(Training_Data_ne, padding = True)
+Test_Data = Tokenizer(Test_Data_ne, padding = True)
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
@@ -86,7 +86,10 @@ class Dataset(torch.utils.data.Dataset):
         
     def __getitem__(self, idx):
         item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
-        item['labels'] = torch.tensor(self.labels[idx])
+        labelcopy = self.labels[idx]
+        for i in range(len(item['input_ids'])-len(self.labels[idx])):
+            labelcopy.append(-100)
+        item['labels'] = torch.tensor(labelcopy)
         return item
 
     def __len__(self):
