@@ -15,8 +15,8 @@ NumOfTraining = int(len(Dataset)/100*TrainTestRatio)
 
 def labels_to_int():
     LabelDict = {}
-    LabelDict["[CLS]"] = 8
-    LabelDict["[SEP]"] = 7
+    LabelDict["[CLS]"] = -100
+    LabelDict["[SEP]"] = -100
     LabelDict["Nul"] = 0
     LabelDict["Noise"] = 6
     LabelDict["Grad"] = 1
@@ -24,7 +24,7 @@ def labels_to_int():
     LabelDict["Sek"] = 3
     LabelDict["Latitude"] = 4
     LabelDict["Longitude"] = 5
-    LabelDict["Padded"] = 9
+    LabelDict["Padded"] = -100
     IntToLabel = {}
     IntToLabel[0] = "Nul"
     IntToLabel[1] = "Grad"
@@ -33,9 +33,7 @@ def labels_to_int():
     IntToLabel[4] = "Latitutde"
     IntToLabel[5] = "Longitude"
     IntToLabel[6] = "Noise"
-    IntToLabel[7] = "[SEP]"
-    IntToLabel[8] = "[CLS]"
-    IntToLabel[9] = "Padded"
+    IntToLabel[-100] = ["[SEP]","[CLS]", "Padded"]
     return LabelDict, IntToLabel
 
 LabelDict, IntLabelDict = labels_to_int()
@@ -48,12 +46,12 @@ Test_Data_ne = []
 Test_Labels = []
 All_Labels = []
 for ((ID, Par), Labels) in Dataset:
-    NewLabels = [-2]
+    NewLabels = [-100]
     for Label in Labels:
         NewLabels.append(LabelDict[Label])
         if Label not in All_Labels:
             All_Labels.append(Label)
-    NewLabels.append(-1)
+    NewLabels.append(-100)
     if len(Training_Data_ne)<NumOfTraining:
         Training_Data_ne.append(Par)    
         Training_Labels.append(NewLabels)
@@ -98,7 +96,7 @@ Train_Dataset = Dataset(Training_Data, Training_Labels)
 Test_Dataset = Dataset(Test_Data, Test_Labels)
 
 from transformers import DistilBertForTokenClassification
-model = DistilBertForTokenClassification.from_pretrained('distilbert-base-uncased', num_labels=NumOfLabels+3)
+model = DistilBertForTokenClassification.from_pretrained('distilbert-base-uncased', num_labels=8)
 
 
 from transformers import Trainer, TrainingArguments
