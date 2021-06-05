@@ -17,7 +17,7 @@ Symbols = ["•", "H", "V", "¢", ".", "j", "J", "°", ",", ";", "Њ", "Ј", "U"
            '"', "″", "'", "o", "@", "؇", "-", "¶", "(", ")", "Љ", "±",
            ":", "µ", "/",
            "8", "9"] # Found by trial & error
-
+Additional_Symbols = ["and"] # used by coordinates, not used in creation
 import re
 
 
@@ -415,12 +415,11 @@ while Runner <= NumOfExamples:
             CoordsNew, Labels = generate_eight_coords()
             random.shuffle(Eighters)
             (Coords, Regexfound, Par) = Eighters[0]
-            NewPar = Par.replace(Regexfound, CoordsNew)
             newpar, Labellist = Replace(Regexfound, Par, CoordsNew, Labels)
     else:
         random.shuffle(NotFound)
-        newpar = NotFound[0]
-        splitted_ex = Tokenizer.tokenize(split_string(newpar))
+        newpar = split_string(NotFound[0])
+        splitted_ex = Tokenizer.tokenize(newpar)
         Labellist = []
         for i in range(len(splitted_ex)):
             Labellist.append("Nul")

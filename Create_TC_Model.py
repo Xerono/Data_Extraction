@@ -128,7 +128,7 @@ trainer = Trainer(
 
 trainer.train()
 
-ModName = "TC_Model_Coordinates_Fake/"
 
+ModName = "TC_Model_Coordinates_Fake/"
 model.save_pretrained(CurDir + "/Models/" + ModName)
 print("Saved model")
