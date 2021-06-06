@@ -109,7 +109,7 @@ from transformers import Trainer, TrainingArguments
 Batch_Size_Eval = Batch_Size_Train
 
 training_args = TrainingArguments(
-    output_dir= CurDir + '/Results/',          # output directory
+    output_dir= CurDir + '/Results/Outputs/',          # output directory
     num_train_epochs=NumOfEpochs,              # total number of training epochs
     per_device_train_batch_size=Batch_Size_Train,  # batch size per device during training
     per_device_eval_batch_size=Batch_Size_Eval,   # batch size for evaluation
