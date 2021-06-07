@@ -68,10 +68,22 @@ Con.close()
 Dataset = []
 LongPars = []
 
+def remove_soils(FPID, Par):
+    rpar = Par
+    Soils = Paragraphs[FPID]
+    for (Soil, SoilD) in Par:
+        soil = Soil.lower()
+        soilD = SoilD.lower()
+        rpar = rpar.replace(soil, "")
+        rpar = rpar.replace(soilD, "")
+    return rpar
+
 for (FPID, File, Par) in Pars:
     Par = Par.lower()
     if len(Par) < Maxlength:
         if FPID in Paragraphs.keys():
+            if ModelType == "Soilless":
+                Par = remove_soils(FPID, Par)
             Dataset.append(((FPID, Par), 1))
         else:
             Dataset.append(((FPID, Par), 0))
@@ -81,6 +93,7 @@ for (FPID, File, Par) in Pars:
 
 
 # Split into training/testdata
+           
 
 import random
 
