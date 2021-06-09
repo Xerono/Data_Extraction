@@ -200,7 +200,7 @@ for (PotCords, LenCoords, SplitPar) in Dataset:
         if len(RevTokens)>0:
             Resultsdict[10] += 1
         else:
-            Resultsdict[00] += 1
+            Resultsdict[o0] += 1
     else:
         if len(RevTokens)>0:
             Resultsdict[11] += 1
