@@ -153,17 +153,18 @@ def ToCoords(RevTokens):
     Lat = []
     Long = []
     for (Token, ClassList) in RevTokens:
-        for Class in ClassList:
-            if Class == 1:
-                Grad.append(Token)
-            if Class == 2:
-                Min.append(Token)
-            if Class == 3:
-                Sek.append(Token)
-            if Class == 4:
-                Lat.append(Token)
-            if Class == 5:
-                Long.append(Token)
+        if "#" not in Token:
+            for Class in ClassList:
+                if Class == 1:
+                    Grad.append(Token)
+                if Class == 2:
+                    Min.append(Token)
+                if Class == 3:
+                    Sek.append(Token)
+                if Class == 4:
+                    Lat.append(Token)
+                if Class == 5:
+                    Long.append(Token)
     GradE = Extend(Grad)
     MinE = Extend(Min)
     SekE = Extend(Sek)
@@ -193,78 +194,91 @@ Resultsdict[B0F] = 0
 Resultsdict[B0N] = 0
 
 Runner = 0
+HitDict = {}
+for i in range(9):
+    HitDict[i] = 0
 
 for (PotCords, LenCoords, SplitPar) in Dataset:
-    Tokens = Tokenizer.tokenize(SplitPar)
-    Labels = get_label(SplitPar, Model, Tokenizer)
-    Classes = get_token_class(Tokens, Labels)
-    RevTokens = extract_relevant_classes(Tokens, Classes)
+    if len(SplitPar)<Maxlength:
+        Tokens = Tokenizer.tokenize(SplitPar)
+        Labels = get_label(SplitPar, Model, Tokenizer)
+        Classes = get_token_class(Tokens, Labels)
+        RevTokens = extract_relevant_classes(Tokens, Classes)
 
-    if LenCoords == 0:
-        if len(RevTokens)>0:
-            Resultsdict[10] += 1
+        if LenCoords == 0:
+            if len(RevTokens)>0:
+                Resultsdict[10] += 1
+            else:
+                Resultsdict[o0] += 1
         else:
-            Resultsdict[o0] += 1
-    else:
-        if len(RevTokens)>0:
-            Resultsdict[11] += 1
-        else:
-            Resultsdict[o1] += 1
+            if len(RevTokens)>0:
+                Resultsdict[11] += 1
+            else:
+                Resultsdict[o1] += 1
 
-        (GradE, MinE, SekE, DirE, rnum) = ToCoords(RevTokens)
-        if rnum != LenCoords:
-            if len(RevTokens)>=0:
-                Resultsdict[B1N] += 1
+            (GradE, MinE, SekE, DirE, rnum) = ToCoords(RevTokens)
+            if rnum != LenCoords:
+                if len(RevTokens)>=0:
+                    Resultsdict[B1N] += 1
+                else:
+                    Resultsdict[B0N] += 1
             else:
-                Resultsdict[B0N] += 1
-        else:
-            ReturnCoords = []
-            Hits = 0
-            if LenCoords == 8:
-                for grad in GradE:
-                    if grad == PotCords[0]:
+                ReturnCoords = []
+                Found = True
+                for i in range(LenCoords):
+                    ReturnCoords.append(False)
+                Hits = 0
+                if LenCoords == 8:
+                    for grad in GradE:
+                        if (not ReturnCoords[0]) and grad == PotCords[0]:
+                            ReturnCoords[0] = grad
+                        if (not ReturnCoords[4]) and grad == PotCords[4]:
+                            ReturnCoords[4] = grad
+                    for mint in MinE:
+                        if (not ReturnCoords[1]) and mint == PotCords[1]:
+                            ReturnCoords[1] = mint
+                        if (not ReturnCoords[5]) and mint == PotCords[5]:
+                            ReturnCoords[5] = mint
+                    for sek in SekE:
+                        if (not ReturnCoords[2]) and sek == PotCords[2]:
+                            ReturnCoords[2] = sek
+                        if (not ReturnCoords[6]) and sek == PotCords[6]:
+                            ReturnCoords[6] = sek
+                    for dire in DirE:
+                        if (not ReturnCoords[3]) and dire == PotCords[3]:
+                            ReturnCoords[3] = dire
+                        if (not ReturnCoords[7]) and dire == PotCords[7]:
+                            ReturnCoords[7] = dire
+                else:
+                    for grad in GradE:
+                        if (not ReturnCoords[0]) and grad == PotCords[0]:
+                            ReturnCoords[0] = grad
+                        if (not ReturnCoords[3]) and grad == PotCords[3]:
+                            ReturnCoords[3] = grad
+                    for mint in MinE:
+                        if (not ReturnCoords[1]) and mint == PotCords[1]:
+                            ReturnCoords[1] = mint
+                        if (not ReturnCoords[4]) and mint == PotCords[4]:
+                            ReturnCoords[4] = mint
+                    for dire in DirE:
+                        if (not ReturnCoords[2]) and dire == PotCords[2]:
+                            ReturnCoords[2] = dire
+                        if (not ReturnCoords[5]) and dire == PotCords[5]:
+                            ReturnCoords[5] = dire
+                Hits = 0
+                for i in range(len(ReturnCoords)):
+                    if ReturnCoords[i] == PotCords[i]:
                         Hits += 1
-                    if grad == PotCords[4]:
-                        Hits += 1
-                for mint in MinE:
-                    if mint == PotCords[1]:
-                        Hits += 1
-                    if mint == PotCords[5]:
-                        Hits += 1
-                for sek in SekE:
-                    if sek == PotCords[2]:
-                        Hits += 1
-                    if sek == PotCords[6]:
-                        Hits += 1
-                for dire in DirE:
-                    if dire == PotCords[3]:
-                        Hits += 1
-                    if dire == PotCords[7]:
-                        Hits += 1
-            else:
-                for grad in GradE:
-                    if grad == PotCords[0]:
-                        Hits += 1
-                    if grad == PotCords[3]:
-                        Hits += 1
-                for mint in MinE:
-                    if mint == PotCords[1]:
-                        Hits += 1
-                    if mint == PotCords[4]:
-                        Hits += 1
-                for dire in DirE:
-                    if dire == PotCords[2]:
-                        Hits += 1
-                    if dire == PotCords[5]:
-                        Hits += 1                
-
-            if Hits == LenCoords:
-                Resultsdict[B1F] += 1
-            else:
-                Resultsdict[B1N] += 1
-    Runner+=1
-    if Runner%1000==0:
-        print(str(Runner) + "/" + str(len(Dataset)))
+                    else:
+                        Found = False
+                HitDict[Hits] += 1
+                if Found:
+                    Resultsdict[B1F] += 1               
+                else:
+                    Resultsdict[B1N] += 1
+        Runner+=1
+        if Runner%1000==0:
+            print(str(Runner) + "/" + str(len(Dataset)))
 
 
         
@@ -303,5 +317,7 @@ sql_command = "INSERT INTO Results VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 Cur.executemany(sql_command, results_list)
 Con.commit()
 Con.close()
+print("Realdatadict:")
+print(HitDict)
 print("Finished")
     

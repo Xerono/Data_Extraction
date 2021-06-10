@@ -187,19 +187,19 @@ for ((FPID, Par), Label) in Dataset:
         Found_Words = split_check(Par, Model, Tokenizer, Percentage)
         if ModelType == "Soils" or ModelType == "Soilless":
             for (Soil, SoilD) in Paragraphs[FPID]:
-                Not_Found = True
+                Found = False
                 soil = Soil.lower()
                 soilD = SoilD.lower()
                 for Fword in Found_Words:
                     fword = Fword.lower()
-                    if Not_Found:
-                        if fword in soil or soil in fword or soilD in fword or fword in soilD:
-                            Not_Found = False
-                            if OverPerc:
-                                Resultsdict[B1F] += 1
-                            else:
-                                Resultsdict[B0F] += 1
-                if Not_Found:
+                    if fword in soil or soil in fword or soilD in fword or fword in soilD:
+                        Found = True
+                if Found == True:
+                    if OverPerc:
+                        Resultsdict[B1F] += 1
+                    else:
+                        Resultsdict[B0F] += 1
+                else:
                     if OverPerc:
                         Resultsdict[B1N] += 1
                     else:

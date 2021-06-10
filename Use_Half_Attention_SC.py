@@ -1,7 +1,7 @@
 #Variables
 
-Soils_Q = False # If false, Coordinate Model will be used
-Layernums = [0, 1, 2, 3, 4, 5] # Layers from which attention should be used
+Soils_Q = True # If false, Coordinate Model will be used
+Layernums = [0] # Layers from which attention should be used
 
 Debug_Q = False # Output debug information
 
@@ -412,7 +412,7 @@ for ((FPID, Par), Label) in Dataset:
             for (Soil, SoilD) in Paragraphs[FPID]:
                 Found = False
                 for word in imp_words_checked:  
-                    if (Soil in word) or (SoilD in word):
+                    if (Soil in word) or (SoilD in word) or word in Soil or word in SoilD:
                         Found = True
                 if Found == True:
                     if OverPerc:

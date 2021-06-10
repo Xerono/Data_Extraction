@@ -25,7 +25,7 @@ def labels_to_int():
 
 LabelDict, IntLabelDict = labels_to_int()
 
-Model_Path = ModPath + "TC2_Model_Coordinates/"
+Model_Path = ModPath + "TC2a_Model_Coordinates/"
 
 
 
@@ -161,7 +161,7 @@ for (PotCords, Regex, Par) in Dataset:
         
 results_list = []
 
-ModName = "TC2_Coordinates"
+ModName = "TC2a_Coordinates"
 
 results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
                      , Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N], 100)) 

@@ -1,7 +1,7 @@
 # Variables
 
 ModelType = "Soils"
-#ModelType = "Soilless"
+ModelType = "Soilless"
 #ModelType = "Coordinates"
 
 NumOfBest = 10 # Length of list of words with the highest attention
@@ -290,7 +290,7 @@ for ((FPID, Par), Label) in Dataset:
                 for (Soil, SoilD) in Paragraphs[FPID]:
                     Found = False
                     for word in imp_words_checked:  
-                        if (Soil in word) or (SoilD in word):
+                        if (Soil in word) or (SoilD in word) or word in SoilD or word in Soil:
                             Found = True
                     if Found == True:
                         if OverPerc:
