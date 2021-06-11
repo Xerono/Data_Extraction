@@ -25,7 +25,7 @@ def labels_to_int():
 
 LabelDict, IntLabelDict = labels_to_int()
 
-Model_Path = ModPath + "TC2a_Model_Coordinates/"
+Model_Path = ModPath + "TC2_Model_Coordinates/"
 
 
 
@@ -59,15 +59,15 @@ Dataset = []
 Numbers = [0,0,0]
 for (Coords, Regex, SplitPar) in Sixers:
     if len(SplitPar) < Maxlength:
-        Dataset.append((Coords, 6, SplitPar))
+        Dataset.append((Coords, Regex, SplitPar))
         Numbers[0] += 1
 for (Coords, Regex, SplitPar) in Eighters:
     if len(SplitPar) < Maxlength:
-        Dataset.append((Coords, 8, SplitPar))
+        Dataset.append((Coords, Regex, SplitPar))
         Numbers[1] += 1
 for SplitPar in NotFound:
     if len(SplitPar) < Maxlength:
-        Dataset.append(([], 0, SplitPar))
+        Dataset.append(([], "", SplitPar))
         Numbers[2] += 1
 print(Numbers)
         
@@ -111,6 +111,11 @@ def get_classes(Labels):
             Classes.append(1)
     return Classes
 
+HitDict = {}
+RHitDict = {}
+FailDict = {}
+RFailDict = {}
+
 for (PotCords, Regex, Par) in Dataset:
     Tokens = Tokenizer.tokenize(Par)
     Labels = get_label(Par, Model, Tokenizer)
@@ -132,27 +137,57 @@ for (PotCords, Regex, Par) in Dataset:
         else:
             Resultsdict[o1] += 1
 
-        TokenCoords = []
-        for Coord in PotCords:
-            TokenCoords.append(Tokenizer.tokenize(Coord))
-        for Tokengroup in TokenCoords:
-            Found = True
-            for Token in Tokengroup:
-                if Token not in Found_Coords:
-                    Found = False
-            for Token in Found_Coords:
-                if Token not in Tokengroup:
-                    Found = False
-            if not Found:
-                if len(Found_Coords)>0:
-                    Resultsdict[B1N] += 1
-                else:
-                    Resultsdict[B0N] += 1
+        TokenCoords = Tokenizer.tokenize(Regex)
+        Hits = 0
+        Fails = 0
+        RHits = 0
+        RFails = 0
+        Extracted_Coords = []
+        for Token in TokenCoords:
+            if Token in Found_Coords:
+                Hits += 1
             else:
-                if len(Found_Coords)>0:
-                    Resultsdict[B1F] += 1
-                else:
-                    Resultsdict[B1N] += 1
+                Fails += 1
+        for Token in Found_Coords:
+            if Token in TokenCoords:
+                RHits += 1
+                Extracted_Coords.append(Token)
+            else:
+                RFails += 1
+        Found = True
+        if len(Extracted_Coords) == len(PotCords):
+            for i in range(len(Extracted_Coords)):
+                if Extracted_Coords[i] != PotCords[i]:
+                    Found = False
+        else:
+            Found = False
+        if Found:
+            if len(Found_Coords)>0:
+                Resultsdict[B1F] += 1
+            else:
+                Resultsdict[B0F] += 1 # Should never happen
+        else:
+            if len(Found_Coords)>0:
+                Resultsdict[B1N] += 1
+            else:
+                Resultsdict[B0N] += 1            
+            
+        if Hits in HitDict.keys():
+            HitDict[Hits] += 1
+        else:
+            HitDict[Hits] = 1
+        if RHits in RHitDict.keys():
+            RHitDict[RHits] += 1
+        else:
+            RHitDict[RHits] = 1
+        if Fails in FailDict.keys():
+            FailDict[Fails] += 1
+        else:
+            FailDict[Fails] = 1
+        if RFails in RFailDict.keys():
+            RFailDict[RFails] += 1
+        else:
+            RFailDict[RFails] = 1
     Runner+=1
     if Runner%1000==0:
         print(str(Runner) + "/" + str(len(Dataset)))
@@ -161,10 +196,24 @@ for (PotCords, Regex, Par) in Dataset:
         
 results_list = []
 
-ModName = "TC2a_Coordinates"
+ModName = "TC2_Coordinates"
 
 results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
                      , Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N], 100)) 
+
+print("HitDict:")
+for i in sorted(HitDict.keys()):
+    print(str(i) + ": " + str(HitDict[i]))
+print("RHitDict:")
+for i in sorted(RHitDict.keys()):
+    print(str(i) + ": " + str(RHitDict[i]))
+print("FailDict:")
+for i in sorted(FailDict.keys()):
+    print(str(i) + ": " + str(FailDict[i]))
+print("RFailDict:")
+for i in sorted(RFailDict.keys()):
+    print(str(i) + ": " + str(RFailDict[i]))
+
 
 Database = CurDir + "/Results/Results.db"
 if not os.path.isfile(Database):
