@@ -1,12 +1,15 @@
 import os
 
+modeltype = "a" # Coordinates get replaced in existing sentences
+#modeltye = "b" # Coordinates get inserted in sentences with random words
+
 CurDir = os.getcwd()
 
 ModPath = CurDir + "/Models/"
 
 import sqlite3
 import pickle
-FakeDataFile = open(CurDir + "/Files/FakeData.pickle", "rb")
+FakeDataFile = open(CurDir + "/Files/FakeData_" + modeltype + ".pickle", "rb")
 Dataset = pickle.load(FakeDataFile)
 OriginalPars = []
 for ((ID, Splitpar), Labels) in Dataset:
@@ -282,7 +285,7 @@ for (PotCords, LenCoords, SplitPar) in Dataset:
         
 results_list = []
 
-ModName = "TC1_Fake_Fakedata"
+ModName = "TC1" + modeltype + "_Fake_Fakedata"
 
 results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
                      , Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N], 100)) 

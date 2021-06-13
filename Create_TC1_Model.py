@@ -3,13 +3,16 @@ import os
 import random
 
 
+modeltype = "a" # Coordinates get replaced in existing sentences
+#modeltye = "b" # Coordinates get inserted in sentences with random words
+
 randomseed = "Randomseed"
 TrainTestRatio = 70
 NumOfEpochs = 3
 Batch_Size_Train = 8
 
 CurDir = os.getcwd()
-FakeDataFile = open(CurDir + "/Files/FakeData.pickle", "rb")
+FakeDataFile = open(CurDir + "/Files/FakeData_" + modeltype +".pickle", "rb")
 Dataset = pickle.load(FakeDataFile)
 NumOfTraining = int(len(Dataset)/100*TrainTestRatio)
 
@@ -129,6 +132,6 @@ trainer = Trainer(
 trainer.train()
 
 
-ModName = "TC1_Model_Coordinates_Fake/"
+ModName = "TC1" + modeltype + "_Model_Coordinates_Fake/"
 model.save_pretrained(CurDir + "/Models/" + ModName)
 print("Saved model")

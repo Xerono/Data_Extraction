@@ -1,5 +1,9 @@
 import os
 
+
+modeltype = "a" # Coordinates get replaced in existing sentences
+#modeltye = "b" # Coordinates get inserted in sentences with random words
+
 CurDir = os.getcwd()
 
 ModPath = CurDir + "/Models/"
@@ -37,7 +41,7 @@ def labels_to_int():
 
 LabelDict, IntLabelDict = labels_to_int()
 
-Model_Path = ModPath + "TC1_Model_Coordinates_Fake/"
+Model_Path = ModPath + "TC1" + modeltype + "_Model_Coordinates_Fake/"
 
 
 
@@ -284,7 +288,7 @@ for (PotCords, LenCoords, SplitPar) in Dataset:
         
 results_list = []
 
-ModName = "TC1_Fake_Realdata"
+ModName = "TC1" + modeltype + "_Fake_Realdata"
 
 results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
                      , Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N], 100)) 
