@@ -5,6 +5,7 @@ import random
 
 modeltype = "a" # Coordinates get replaced in existing sentences
 #modeltye = "b" # Coordinates get inserted in sentences with random words
+modeltye = "c" # Only real data
 
 randomseed = "Randomseed"
 TrainTestRatio = 70
