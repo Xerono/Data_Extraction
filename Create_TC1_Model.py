@@ -38,7 +38,7 @@ for modeltype in potmodels:
         Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
         from transformers import DistilBertForTokenClassification
         model = BertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=8)
-    if modeltype == "a_bu" or modeltype == "b_bu"
+    if modeltype == "a_bu" or modeltype == "b_bu":
         PreTrainedModel = 'bert-base-uncased'
         from transformers import BertTokenizerFast
         Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
