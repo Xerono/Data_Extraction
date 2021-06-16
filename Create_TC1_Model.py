@@ -171,4 +171,6 @@ for modeltype in potmodels:
         ModName = "TC1" + modeltype + "_Model_Coordinates/"
         model.save_pretrained(CurDir + "/Models/" + ModName)
         print("Saved model " + modeltype)
+    else:
+        print(modeltype + " already existing, skip")
 
