@@ -19,27 +19,27 @@ for modeltype in potmodels:
         from transformers import DistilBertTokenizerFast
         Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
         from transformers import DistilBertForTokenClassification
-        model = DistilBertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        model = DistilBertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=8).to(device)
 
     if modeltype == "r_dc":
         PreTrainedModel = 'distilbert-base-cased'
         from transformers import DistilBertTokenizerFast
         Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
         from transformers import DistilBertForTokenClassification
-        model = DistilBertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        model = DistilBertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=8).to(device)
         
     if modeltype == "r_bc":
         PreTrainedModel = 'bert-base-cased'
         from transformers import BertTokenizerFast
         Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
         from transformers import DistilBertForTokenClassification
-        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        model = BertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=8).to(device)
     if modeltype == "r_bu":
         PreTrainedModel = 'bert-base-uncased'
         from transformers import BertTokenizerFast
         Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
         from transformers import BertForTokenClassification
-        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        model = BertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=8).to(device)
 
     randomseed = "Randomseed"
     TrainTestRatio = 70
