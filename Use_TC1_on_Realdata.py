@@ -12,7 +12,7 @@ import os
 # u/c:
 # u: Uncased
 # c: Cased
-potmodels = ["a_du", "a_dc", "a_bc", "a_bu", "b_du", "b_dc", "b_bc", "b_bu"]
+potmodels = ["r_du", "r_dc", "r_bc", "r_bu", "a_du", "a_dc", "a_bc", "a_bu", "b_du", "b_dc", "b_bc", "b_bu"]
 #potmodels = ["r_du", "r_dc", "r_bc", "r_bu"]
 all_dicts = {}
 for modeltype in potmodels:
@@ -90,7 +90,7 @@ for modeltype in potmodels:
 
 
     Maxlength = 917
-    Model.eval()
+    model.eval()
 
     import re
     def split_string(Par):
@@ -238,7 +238,7 @@ for modeltype in potmodels:
     HitDict = {}
     for i in range(9):
         HitDict[i] = 0
-
+    print("Starting with " + modeltype)
     for (PotCords, LenCoords, SplitPar) in Dataset:
         if len(SplitPar)<Maxlength:
             Tokens = Tokenizer.tokenize(SplitPar)
@@ -319,7 +319,7 @@ for modeltype in potmodels:
                         Resultsdict[B1N] += 1
             Runner+=1
             if Runner%1000==0:
-                print(str(Runner) + "/" + str(len(Dataset)))
+                #print(str(Runner) + "/" + str(len(Dataset)))
 
 
             

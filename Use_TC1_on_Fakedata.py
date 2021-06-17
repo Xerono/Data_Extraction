@@ -90,7 +90,7 @@ for modeltype in potmodels:
 
 
     Maxlength = 917
-    Model.eval()
+    model.eval()
 
 
     NotFound = []
@@ -235,7 +235,7 @@ for modeltype in potmodels:
     HitDict = {}
     for i in range(9):
         HitDict[i] = 0
-
+    print("Starting with " + modeltype)
     for (PotCords, LenCoords, SplitPar) in Dataset:
         if len(SplitPar)<Maxlength:
             Tokens = Tokenizer.tokenize(SplitPar)
@@ -317,7 +317,7 @@ for modeltype in potmodels:
                         Resultsdict[B1N] += 1
             Runner+=1
             if Runner%1000==0:
-                print(str(Runner) + "/" + str(len(Dataset)))
+                #print(str(Runner) + "/" + str(len(Dataset)))
 
 
             
