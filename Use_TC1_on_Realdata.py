@@ -242,7 +242,7 @@ for modeltype in potmodels:
     for (PotCords, LenCoords, SplitPar) in Dataset:
         if len(SplitPar)<Maxlength:
             Tokens = Tokenizer.tokenize(SplitPar)
-            Labels = get_label(SplitPar, Model, Tokenizer)
+            Labels = get_label(SplitPar, model, Tokenizer)
             Classes = get_token_class(Tokens, Labels)
             RevTokens = extract_relevant_classes(Tokens, Classes)
 
