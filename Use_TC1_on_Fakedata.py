@@ -318,6 +318,7 @@ for modeltype in potmodels:
             Runner+=1
             if Runner%1000==0:
                 #print(str(Runner) + "/" + str(len(Dataset)))
+                pass
 
 
             
