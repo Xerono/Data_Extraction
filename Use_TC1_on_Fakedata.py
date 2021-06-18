@@ -360,7 +360,11 @@ for modeltype in potmodels:
     print(modeltype)
     print("Fakedatadict:")
     print(HitDict)
-    all_dicts[modeltype] = HitDict
+    all_dicts[modeltype] = (HitDict, Numbers)
     print("Finished")
-print(all_dicts)        
+for key in all_dicts.keys():
+    print(key)
+    print(all_dicts[key][1])
+    print(all_dicts[key][0])
+    print()
 
