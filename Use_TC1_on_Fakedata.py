@@ -12,7 +12,6 @@ import os
 # u: Uncased
 # c: Cased
 potmodels = ["a_du", "a_dc", "a_bc", "a_bu", "b_du", "b_dc", "b_bc", "b_bu"]
-all_dicts = {}
 for modeltype in potmodels:
     CurDir = os.getcwd()
 
@@ -56,8 +55,8 @@ for modeltype in potmodels:
     FakeDataFile = open(CurDir + "/Files/FakeData_" + modeltype + ".pickle", "rb")
     Dataset = pickle.load(FakeDataFile)
     OriginalPars = []
-    for ((ID, Splitpar), Labels) in Dataset:
-        OriginalPars.append((ID, Labels, Splitpar))
+    for ((ID, Splitpar), PotCoords, Labels) in Dataset:
+        OriginalPars.append((ID, Labels, PotCoords, Splitpar))
 
     def labels_to_int():
         LabelDict = {}
@@ -91,53 +90,20 @@ for modeltype in potmodels:
 
     Maxlength = 917
     model.eval()
-
-
-    NotFound = []
-
-    Data = []
-
-    for (FPID, Label, Par) in OriginalPars:
-        Splitpar = Tokenizer.tokenize(Par)
-        Grads = []
-        Mins = []
-        Sek = []
-        Long = []
-        Lat = []
-        for i in range(len(Label)):
-            if Label[i] == "Grad":
-                Grads.append(Splitpar[i])
-            if Label[i] == "Min":
-                Mins.append(Splitpar[i])
-            if Label[i] == "Sek":
-                Sek.append(Splitpar[i])
-            if Label[i] == "Latitude":
-                Lat.append(Splitpar[i])
-            if Label[i] == "Longitude":
-                Long.append(Splitpar[i])
-        if len(Grads) == 4 and len(Mins) == 4 and len(Lat)==1 and len(Long) == 1:
-            if len(Sek)==4:
-                PotCoord = ((Grads[0] + Grads[1], Mins[0] + Mins[1], Sek[0] + Sek[1], Lat[0], Grads[2] + Grads[3], Mins[2] + Mins[3], Sek[2] + Sek[3], Long[0]))
-                Data.append((PotCoord, 8, Par))
-            else:
-                PotCoord = ((Grads[0] + Grads[1], Mins[0] + Mins[1], Lat[0], Grads[2] + Grads[3], Mins[2] + Mins[3], Long[0]))
-                Data.append((PotCoord, 6, Par))
-        else:
-            NotFound.append(Par)
-
     Dataset = []
+
     Numbers = [0,0,0]
-    for (Coords, Num, SplitPar) in Data:
-        if len(SplitPar) < Maxlength:
-            Dataset.append((Coords, Num, SplitPar))
-            if Num == 6:
+    for (FPID, Label, PotCoords, Par) in OriginalPars:
+        if len(PotCoords)>0:
+            Dataset.append((PotCoords, len(PotCoords), Par))
+            if len(PotCoords) == 6:
                 Numbers[0] += 1
             else:
                 Numbers[1] += 1
-    for SplitPar in NotFound:
-        if len(SplitPar) < Maxlength:
-            Dataset.append(([], 0, SplitPar))
+        else
+            Dataset.append(((), 0, Par))
             Numbers[2] += 1
+
     print(Numbers)
             
     def get_label(Str, Model, Tokenizer):
@@ -353,18 +319,38 @@ for modeltype in potmodels:
 
     Con = sqlite3.connect(Database)
     Cur = Con.cursor()
+
+    sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='HitDicts'"
+    res = Cur.execute(sql_command).fetchall()
+    if res[0][0] == 0:
+        sql_command = """
+                CREATE TABLE HitDicts (
+                Model String NOT NULL,
+                Null INTEGER NOT NULL,
+                Eins INTEGER NOT NULL,
+                Zwei INTEGER NOT NULL,
+                Drei INTEGER NOT NULL,
+                Vier INTEGER NOT NULL,
+                Fuenf INTEGER NOT NULL,
+                Sechs INTEGER NOT NULL,
+                Sieben INTEGER NOT NULL,
+                Acht INTEGER NOT NULL,
+                Sixers INTEGER NOT NULL,
+                Eighters INTEGER NOT NULL,
+                Empty INTEGER NOT NULL,
+                PRIMARY KEY(Model)
+                );"""
+        Cur.execute(sql_command)
+        Con.commit()
+    
     sql_command = "INSERT INTO Results VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     Cur.executemany(sql_command, results_list)
     Con.commit()
+    sql_command = "INSERT INTO HitDicts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    results_list = [(modeltype + "_Fake", HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8], Numbers[0], Numbers[1], Numbers[2])]
+    Cur.executemany(sql_command, results_list)
+    Con.commit()
     Con.close()
-    print(modeltype)
-    print("Fakedatadict:")
-    print(HitDict)
-    all_dicts[modeltype] = (HitDict, Numbers)
-    print("Finished")
-for key in all_dicts.keys():
-    print(key)
-    print(all_dicts[key][1])
-    print(all_dicts[key][0])
-    print()
+    print("Finished " + modeltype)
+
 

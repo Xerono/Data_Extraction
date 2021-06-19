@@ -133,6 +133,7 @@ for tknz in realmodels:
         gradW = str(random.randint(0, 90))
         minW = str(random.randint(0, 59))
         WE = random.choice(["W", "E"])
+        PotCoords = (gradN, minN, NS, gradW, minW, WE)
         Labels = []
         Coords = []
         if len(gradN) == 1:
@@ -196,7 +197,7 @@ for tknz in realmodels:
         CoordsString = ""
         for i in Coords:
             CoordsString += i
-        return (CoordsString, Labels)
+        return (CoordsString, PotCoords, Labels)
 
     def generate_eight_coords():
         gradN = str(random.randint(0, 90))
@@ -207,6 +208,7 @@ for tknz in realmodels:
         minW = str(random.randint(0, 59))
         sekW = str(random.randint(0, 59))
         WE = random.choice(["W", "E"])
+        PotCoords = (gradN, minN, sekN, NS, gradW, minW, sekW, WE)
         Labels = []
         Coords = []
         if len(gradN) == 1:
@@ -296,7 +298,7 @@ for tknz in realmodels:
         CoordsString = ""
         for i in Coords:
             CoordsString += i
-        return (CoordsString, Labels)
+        return (CoordsString, PotCoords, Labels)
 
     Maxlength = 917
 
@@ -316,9 +318,9 @@ for tknz in realmodels:
             random.shuffle(PostWords)
             PostPar.append(PostWords[0])
         if random.randint(0,1)==1:
-            (Coords, Labels) = generate_eight_coords()
+            (Coords, PotCoords, Labels) = generate_eight_coords()
         else:
-            (Coords, Labels) = generate_six_coords()
+            (Coords, PotCoords, Labels) = generate_six_coords()
         PreString = ""
         PostString = ""
         for word in PrePar:
@@ -337,7 +339,7 @@ for tknz in realmodels:
             PostLabels.append("Nul")
         FinalString = split_string(PreString) + " " + split_string(Coords) + " " + split_string(PostString)
         FinalLabels = PreLabels + Labels + PostLabels
-        return(FinalString, FinalLabels)
+        return(FinalString, PotCoords, FinalLabels)
 
     NumOfExamples = 100000
     Dataset = []
@@ -345,17 +347,18 @@ for tknz in realmodels:
     import time
     starttime = time.time()
     while Runner <= NumOfExamples:
-        if random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])>3:
-            newpar, Labellist = create_paragraph()
+        if random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])<3:
+            newpar, PotCoords, Labellist = create_paragraph()
         else:
             random.shuffle(NotFound)
             newpar = split_string(NotFound[0])
             splitted_ex = Tokenizer.tokenize(newpar)
             Labellist = []
+            PotCoords = ()
             for i in range(len(splitted_ex)):
                 Labellist.append("Nul")
         if len(newpar)<Maxlength:
-            Dataset.append(((Runner, newpar), Labellist))
+            Dataset.append(((Runner, newpar), PotCoords, Labellist))
             Runner+=1
         if Runner % 1000 == 0:
             print(str(Runner) + "/" + str(NumOfExamples))

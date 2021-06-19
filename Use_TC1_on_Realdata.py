@@ -13,8 +13,7 @@ import os
 # u: Uncased
 # c: Cased
 potmodels = ["r_du", "r_dc", "r_bc", "r_bu", "a_du", "a_dc", "a_bc", "a_bu", "b_du", "b_dc", "b_bc", "b_bu"]
-#potmodels = ["r_du", "r_dc", "r_bc", "r_bu"]
-all_dicts = {}
+
 for modeltype in potmodels:
     CurDir = os.getcwd()
 
@@ -358,14 +357,38 @@ for modeltype in potmodels:
 
     Con = sqlite3.connect(Database)
     Cur = Con.cursor()
+
+    sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='HitDicts'"
+    res = Cur.execute(sql_command).fetchall()
+    if res[0][0] == 0:
+        sql_command = """
+                CREATE TABLE HitDicts (
+                Model String NOT NULL,
+                Null INTEGER NOT NULL,
+                Eins INTEGER NOT NULL,
+                Zwei INTEGER NOT NULL,
+                Drei INTEGER NOT NULL,
+                Vier INTEGER NOT NULL,
+                Fuenf INTEGER NOT NULL,
+                Sechs INTEGER NOT NULL,
+                Sieben INTEGER NOT NULL,
+                Acht INTEGER NOT NULL,
+                Sixers INTEGER NOT NULL,
+                Eighters INTEGER NOT NULL,
+                Empty INTEGER NOT NULL,
+                PRIMARY KEY(Model)
+                );"""
+        Cur.execute(sql_command)
+        Con.commit()
+        
     sql_command = "INSERT INTO Results VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     Cur.executemany(sql_command, results_list)
     Con.commit()
+    sql_command = "INSERT INTO HitDicts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    results_list = [(modeltype + "_Real", HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8], Numbers[0], Numbers[1], Numbers[2])]
+    Cur.executemany(sql_command, results_list)
     Con.close()
-    print(modeltype)
-    print("Realdatadict:")
-    print(HitDict)
-    all_dicts[modeltype] = HitDict
-    print("Finished")
-print(all_dicts)
+
+    print("Finished " + modeltype)
+
         

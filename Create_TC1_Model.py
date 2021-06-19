@@ -91,7 +91,7 @@ for modeltype in potmodels:
         Test_Data_ne = []
         Test_Labels = []
         All_Labels = []
-        for ((ID, Par), Labels) in Dataset:
+        for ((ID, Par), PotCoords, Labels) in Dataset:
             NewLabels = [-100]
             for Label in Labels:
                 NewLabels.append(LabelDict[Label])

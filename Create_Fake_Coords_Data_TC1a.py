@@ -91,6 +91,7 @@ for tknz in realmodels:
         gradW = str(random.randint(0, 90))
         minW = str(random.randint(0, 59))
         WE = random.choice(["W", "E"])
+        PotCoords = (gradN, minN, NS, gradW, minW, WE)
         Labels = []
         Coords = []
         if len(gradN) == 1:
@@ -154,7 +155,7 @@ for tknz in realmodels:
         CoordsString = ""
         for i in Coords:
             CoordsString += i
-        return (CoordsString, Labels)
+        return (CoordsString, PotCoords, Labels)
 
     def generate_eight_coords():
         gradN = str(random.randint(0, 90))
@@ -165,6 +166,7 @@ for tknz in realmodels:
         minW = str(random.randint(0, 59))
         sekW = str(random.randint(0, 59))
         WE = random.choice(["W", "E"])
+        PotCoords = (gradN, minN, sekN, NS, gradW, minW, sekW, WE)
         Labels = []
         Coords = []
         if len(gradN) == 1:
@@ -175,6 +177,7 @@ for tknz in realmodels:
             Labels.append("Grad")
             Coords.append(gradN[0])
             Coords.append(gradN[1])
+
             
         for i in range(random.choice([1,2])):
             Coords.append(random.choice(Symbols))
@@ -188,7 +191,7 @@ for tknz in realmodels:
             Labels.append("Min")
             Coords.append(minN[0])
             Coords.append(minN[1])
-            
+
         for i in range(random.choice([1,2])):
             Coords.append(random.choice(Symbols))
             Labels.append("Noise")
@@ -201,14 +204,14 @@ for tknz in realmodels:
             Labels.append("Sek")
             Coords.append(sekN[0])
             Coords.append(sekN[1])
-            
+
         for i in range(random.choice([1,2])):
             Coords.append(random.choice(Symbols))
             Labels.append("Noise")
         
         Coords.append(NS)
         Labels.append("Latitude")
-        
+
         
         if len(gradW) == 1:
             Labels.append("Grad")
@@ -218,7 +221,7 @@ for tknz in realmodels:
             Labels.append("Grad")
             Coords.append(gradW[0])
             Coords.append(gradW[1])
-            
+
         for i in range(random.choice([1,2])):
             Coords.append(random.choice(Symbols))
             Labels.append("Noise")
@@ -231,7 +234,7 @@ for tknz in realmodels:
             Labels.append("Min")
             Coords.append(minW[0])
             Coords.append(minW[1])
-            
+
         for i in range(random.choice([1,2])):
             Coords.append(random.choice(Symbols))
             Labels.append("Noise")
@@ -244,7 +247,7 @@ for tknz in realmodels:
             Labels.append("Sek")
             Coords.append(sekW[0])
             Coords.append(sekW[1])
-            
+
         for i in range(random.choice([1,2])):
             Coords.append(random.choice(Symbols))
             Labels.append("Noise")
@@ -252,9 +255,10 @@ for tknz in realmodels:
         Coords.append(WE)
         Labels.append("Longitude")
         CoordsString = ""
+
         for i in Coords:
             CoordsString += i
-        return (CoordsString, Labels)
+        return (CoordsString, PotCoords, Labels)
 
 
 
@@ -283,14 +287,14 @@ for tknz in realmodels:
     import time
     starttime = time.time()
     while Runner <= NumOfExamples:
-        if random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])>3:
+        if random.choice([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])<3:
             if random.choice([1, 2]) == 1:
-                CoordsNew, Labels = generate_six_coords()
+                CoordsNew, PotCoords, Labels = generate_six_coords()
                 random.shuffle(Sixers)
                 (Coords, Regexfound, Par) = Sixers[0]
                 newpar, Labellist = Replace(Regexfound, Par, CoordsNew, Labels)
             else:
-                CoordsNew, Labels = generate_eight_coords()
+                CoordsNew, PotCoords, Labels = generate_eight_coords()
                 random.shuffle(Eighters)
                 (Coords, Regexfound, Par) = Eighters[0]
                 newpar, Labellist = Replace(Regexfound, Par, CoordsNew, Labels)
@@ -299,10 +303,11 @@ for tknz in realmodels:
             newpar = split_string(NotFound[0])
             splitted_ex = Tokenizer.tokenize(newpar)
             Labellist = []
+            PotCoords = ()
             for i in range(len(splitted_ex)):
                 Labellist.append("Nul")
         if len(newpar)<Maxlength:
-            Dataset.append(((Runner, newpar), Labellist))
+            Dataset.append(((Runner, newpar), PotCoords, Labellist))
             Runner+=1
         if Runner % 1000 == 0:
             print(str(Runner) + "/" + str(NumOfExamples))
