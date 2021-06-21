@@ -364,7 +364,7 @@ for modeltype in potmodels:
         sql_command = """
                 CREATE TABLE HitDicts (
                 Model String NOT NULL,
-                Null INTEGER NOT NULL,
+                Zero INTEGER NOT NULL,
                 Eins INTEGER NOT NULL,
                 Zwei INTEGER NOT NULL,
                 Drei INTEGER NOT NULL,
@@ -387,6 +387,7 @@ for modeltype in potmodels:
     sql_command = "INSERT INTO HitDicts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     results_list = [(modeltype + "_Real", HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8], Numbers[0], Numbers[1], Numbers[2])]
     Cur.executemany(sql_command, results_list)
+    Con.commit()
     Con.close()
 
     print("Finished " + modeltype)

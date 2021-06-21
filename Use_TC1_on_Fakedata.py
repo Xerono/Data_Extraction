@@ -100,7 +100,7 @@ for modeltype in potmodels:
                 Numbers[0] += 1
             else:
                 Numbers[1] += 1
-        else
+        else:
             Dataset.append(((), 0, Par))
             Numbers[2] += 1
 
@@ -326,7 +326,7 @@ for modeltype in potmodels:
         sql_command = """
                 CREATE TABLE HitDicts (
                 Model String NOT NULL,
-                Null INTEGER NOT NULL,
+                Zero INTEGER NOT NULL,
                 Eins INTEGER NOT NULL,
                 Zwei INTEGER NOT NULL,
                 Drei INTEGER NOT NULL,
