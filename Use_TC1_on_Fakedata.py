@@ -109,7 +109,7 @@ for modeltype in potmodels:
     def get_label(Str, Model, Tokenizer):
         StrEnc = Tokenizer(Str, return_tensors='pt').to(device)
         Output = Model(**StrEnc)
-        Softmaxed = Output.logits.softmax(1)
+        Softmaxed = Output.logits.softmax(-1)
         Labels = []
         for labels in Softmaxed[0]:
             lblcur = []
