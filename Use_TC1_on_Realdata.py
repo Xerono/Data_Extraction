@@ -257,63 +257,59 @@ for modeltype in potmodels:
                     Resultsdict[o1] += 1
 
                 (GradE, MinE, SekE, DirE, rnum) = ToCoords(RevTokens)
-                if rnum != LenCoords:
+                ReturnCoords = []
+                Found = True
+                for i in range(LenCoords):
+                    ReturnCoords.append(False)
+                if LenCoords == 8:
+                    for grad in GradE:
+                        if (not ReturnCoords[0]) and grad == PotCords[0]:
+                            ReturnCoords[0] = grad
+                        if (not ReturnCoords[4]) and grad == PotCords[4]:
+                            ReturnCoords[4] = grad
+                    for mint in MinE:
+                        if (not ReturnCoords[1]) and mint == PotCords[1]:
+                            ReturnCoords[1] = mint
+                        if (not ReturnCoords[5]) and mint == PotCords[5]:
+                            ReturnCoords[5] = mint
+                    for sek in SekE:
+                        if (not ReturnCoords[2]) and sek == PotCords[2]:
+                            ReturnCoords[2] = sek
+                        if (not ReturnCoords[6]) and sek == PotCords[6]:
+                            ReturnCoords[6] = sek
+                    for dire in DirE:
+                        if (not ReturnCoords[3]) and dire == PotCords[3]:
+                            ReturnCoords[3] = dire
+                        if (not ReturnCoords[7]) and dire == PotCords[7]:
+                            ReturnCoords[7] = dire
+                else:
+                    for grad in GradE:
+                        if (not ReturnCoords[0]) and grad == PotCords[0]:
+                            ReturnCoords[0] = grad
+                        if (not ReturnCoords[3]) and grad == PotCords[3]:
+                            ReturnCoords[3] = grad
+                    for mint in MinE:
+                        if (not ReturnCoords[1]) and mint == PotCords[1]:
+                            ReturnCoords[1] = mint
+                        if (not ReturnCoords[4]) and mint == PotCords[4]:
+                            ReturnCoords[4] = mint
+                    for dire in DirE:
+                        if (not ReturnCoords[2]) and dire == PotCords[2]:
+                            ReturnCoords[2] = dire
+                        if (not ReturnCoords[5]) and dire == PotCords[5]:
+                            ReturnCoords[5] = dire
+                Hits = 0
+                for i in range(len(ReturnCoords)):
+                    if ReturnCoords[i] == PotCords[i]:
+                        Hits += 1
+                    else:
+                        Found = False
+                HitDict[Hits] += 1
+                if Found:
+                    Resultsdict[B1F] += 1               
+                else:
                     if len(RevTokens)>=0:
                         Resultsdict[B1N] += 1
-                    else:
-                        Resultsdict[B0N] += 1
-                else:
-                    ReturnCoords = []
-                    Found = True
-                    for i in range(LenCoords):
-                        ReturnCoords.append(False)
-                    Hits = 0
-                    if LenCoords == 8:
-                        for grad in GradE:
-                            if (not ReturnCoords[0]) and grad == PotCords[0]:
-                                ReturnCoords[0] = grad
-                            if (not ReturnCoords[4]) and grad == PotCords[4]:
-                                ReturnCoords[4] = grad
-                        for mint in MinE:
-                            if (not ReturnCoords[1]) and mint == PotCords[1]:
-                                ReturnCoords[1] = mint
-                            if (not ReturnCoords[5]) and mint == PotCords[5]:
-                                ReturnCoords[5] = mint
-                        for sek in SekE:
-                            if (not ReturnCoords[2]) and sek == PotCords[2]:
-                                ReturnCoords[2] = sek
-                            if (not ReturnCoords[6]) and sek == PotCords[6]:
-                                ReturnCoords[6] = sek
-                        for dire in DirE:
-                            if (not ReturnCoords[3]) and dire == PotCords[3]:
-                                ReturnCoords[3] = dire
-                            if (not ReturnCoords[7]) and dire == PotCords[7]:
-                                ReturnCoords[7] = dire
-                    else:
-                        for grad in GradE:
-                            if (not ReturnCoords[0]) and grad == PotCords[0]:
-                                ReturnCoords[0] = grad
-                            if (not ReturnCoords[3]) and grad == PotCords[3]:
-                                ReturnCoords[3] = grad
-                        for mint in MinE:
-                            if (not ReturnCoords[1]) and mint == PotCords[1]:
-                                ReturnCoords[1] = mint
-                            if (not ReturnCoords[4]) and mint == PotCords[4]:
-                                ReturnCoords[4] = mint
-                        for dire in DirE:
-                            if (not ReturnCoords[2]) and dire == PotCords[2]:
-                                ReturnCoords[2] = dire
-                            if (not ReturnCoords[5]) and dire == PotCords[5]:
-                                ReturnCoords[5] = dire
-                    Hits = 0
-                    for i in range(len(ReturnCoords)):
-                        if ReturnCoords[i] == PotCords[i]:
-                            Hits += 1
-                        else:
-                            Found = False
-                    HitDict[Hits] += 1
-                    if Found:
-                        Resultsdict[B1F] += 1               
                     else:
                         Resultsdict[B1N] += 1
             Runner+=1
