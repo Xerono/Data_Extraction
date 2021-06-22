@@ -20,7 +20,7 @@ for ModelType in modeltypes:
     Database = CurDir + "/Files/Database.db"
     Con = sqlite3.connect(Database)
     Cur = Con.cursor()
-        Paragraphs = {}
+    Paragraphs = {}
 
     if ModelType == "Soils" or ModelType == "Soilless":
 
