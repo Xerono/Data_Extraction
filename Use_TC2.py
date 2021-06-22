@@ -190,7 +190,8 @@ for (PotCords, Regex, Par) in Dataset:
             RFailDict[RFails] = 1
     Runner+=1
     if Runner%1000==0:
-        print(str(Runner) + "/" + str(len(Dataset)))
+        pass
+        #print(str(Runner) + "/" + str(len(Dataset)))
 
 
         
@@ -201,19 +202,26 @@ ModName = "TC2_Coordinates"
 results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
                      , Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N], 100)) 
 
-print("HitDict:")
+print("HitDict:") # Anzahl von Paragraphen, bei denen Anzahl viele Originaltoken in den extrahierten Token gefunden wurden
 for i in sorted(HitDict.keys()):
     print(str(i) + ": " + str(HitDict[i]))
-print("RHitDict:")
+print("Enter if ready")
+input()
+print("RHitDict:") # Anzahl von Paragraphen, bei denen Anzahl viele extrahierte Token in den Originaltoken gefunden wurden
 for i in sorted(RHitDict.keys()):
     print(str(i) + ": " + str(RHitDict[i]))
-print("FailDict:")
+print("Enter if ready")
+input()
+print("FailDict:") # Anzahl von Paragraphen, bei denen Anzahl viele Originaltoken nicht in den extrahierten Token gefunden wurden
 for i in sorted(FailDict.keys()):
     print(str(i) + ": " + str(FailDict[i]))
-print("RFailDict:")
+print("Enter if ready")
+input()
+print("RFailDict:") # Anzahl von Paragraphen, bei denen Anzahl viele extrahierte Token nicht in den Originaltoken gefunden wurden
 for i in sorted(RFailDict.keys()):
     print(str(i) + ": " + str(RFailDict[i]))
-
+print("Enter if ready")
+input()
 
 Database = CurDir + "/Results/Results.db"
 if not os.path.isfile(Database):
