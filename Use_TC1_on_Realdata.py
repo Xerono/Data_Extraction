@@ -244,25 +244,25 @@ for modeltype in potmodels:
             Labels = get_label(SplitPar, model, Tokenizer)
             Classes = get_token_class(Tokens, Labels)
             RevTokens = extract_relevant_classes(Tokens, Classes)
+            FoundRele = False
+            for (Token, Labellist) in RevTokens:
+                for lbl in Labellist:
+                    FoundRele = True
 
             if LenCoords == 0:
-                Found = False
-                for (Token, Labellist) in RevTokens:
-                    for lbl in Labellist:
-                        Found = True
-                if Found:
+                if FoundRele:
                     Resultsdict[10] += 1
                 else:
                     Resultsdict[o0] += 1
             else:
-                if len(RevTokens)>0:
+                if FoundRele:
                     Resultsdict[11] += 1
                 else:
                     Resultsdict[o1] += 1
 
                 (GradE, MinE, SekE, DirE, rnum) = ToCoords(RevTokens)
                 ReturnCoords = []
-                Found = True
+                
                 for i in range(LenCoords):
                     ReturnCoords.append(False)
                 if LenCoords == 8:
@@ -303,6 +303,7 @@ for modeltype in potmodels:
                         if (not ReturnCoords[5]) and dire == PotCords[5]:
                             ReturnCoords[5] = dire
                 Hits = 0
+                Found = True
                 for i in range(len(ReturnCoords)):
                     if ReturnCoords[i] == PotCords[i]:
                         Hits += 1
@@ -312,10 +313,10 @@ for modeltype in potmodels:
                 if Found:
                     Resultsdict[B1F] += 1               
                 else:
-                    if len(RevTokens)>=0:
+                    if FoundRele:
                         Resultsdict[B1N] += 1
                     else:
-                        Resultsdict[B1N] += 1
+                        Resultsdict[B0N] += 1
             Runner+=1
             if Runner%1000==0:
                 #print(str(Runner) + "/" + str(len(Dataset)))

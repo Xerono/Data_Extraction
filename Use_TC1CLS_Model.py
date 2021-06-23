@@ -1,186 +1,201 @@
 import os
 
-# a/b:
-# a: Coordinates get replaced in existing sentences
-# b: Coordinates get inserted in sentences with random words
 
-# d/b:
-# d: Distilbert
-# b: Bert
 
-# u/c:
-# u: Uncased
-# c: Cased
-potmodels = ["a_du", "a_dc", "a_bc", "a_bu", "b_du", "b_dc", "b_bc", "b_bu"]
 for modeltype in potmodels:
-    CurDir = os.getcwd()
+CurDir = os.getcwd()
 
-    ModPath = CurDir + "/Models/"
-    Model_Path = ModPath + "TC1" + modeltype + "_Model_Coordinates/"
+ModPath = CurDir + "/Models/"
 
-    import torch
+Model_Path = ModPath + "TC1CLS_Model_Coordinates/"
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-   
-    if modeltype == "a_du" or modeltype == "b_du":
-        PreTrainedModel = 'distilbert-base-uncased'
-        from transformers import DistilBertTokenizerFast
-        Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
-        from transformers import DistilBertForTokenClassification
-        model = DistilBertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+import torch
 
-    if modeltype == "a_dc" or modeltype == "b_dc":
-        PreTrainedModel = 'distilbert-base-cased'
-        from transformers import DistilBertTokenizerFast
-        Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
-        from transformers import DistilBertForTokenClassification
-        model = DistilBertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+PreTrainedModel = 'bert-base-cased'
+from transformers import BertTokenizerFast
+Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
+from transformers import BertForTokenClassification
+model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=9).to(device)
+
+
+import sqlite3
+Database = CurDir + "/Files/Database.db"
+Con = sqlite3.connect(Database)
+Cur = Con.cursor()
+xs = "Select * FROM Pars"
+OriginalPars = Cur.execute(xs).fetchall()
+Con.close()
+
+def labels_to_int():
+    LabelDict = {}
+    LabelDict["[CLS]"] = -100
+    LabelDict["[SEP]"] = -100
+    LabelDict["Nul"] = 0
+    LabelDict["Noise"] = 6
+    LabelDict["Grad"] = 1
+    LabelDict["Min"] = 2
+    LabelDict["Sek"] = 3
+    LabelDict["Latitude"] = 4
+    LabelDict["Longitude"] = 5
+    LabelDict["Padded"] = -100
+    IntToLabel = {}
+    IntToLabel[0] = "Nul"
+    IntToLabel[1] = "Grad"
+    IntToLabel[2] = "Min"
+    IntToLabel[3] = "Sek"
+    IntToLabel[4] = "Latitutde"
+    IntToLabel[5] = "Longitude"
+    IntToLabel[6] = "Noise"
+    IntToLabel[-100] = ["[SEP]","[CLS]", "Padded"]
+    return LabelDict, IntToLabel
+
+LabelDict, IntLabelDict = labels_to_int()
+
+
+Maxlength = 917
+model.eval()
+
+import re
+def split_string(Par):
+    ParSpl = Par.split(" ")
+    Splitted = []
+    for item in ParSpl:
+        Number = False
+        for char in item:
+            if char.isdigit():
+                Number = True
+        if Number:
+            for char in list(item):
+                Splitted.append(char)
+        else:
+            Splitted.append(item)
+    Returnpar = Splitted[0]
+    for word in Splitted[1:]:
+        Returnpar = Returnpar + " " + word
+    return Returnpar
+
+Sixers = []
+Eighters = []
+Errors = []
+NotFound = []
+import Module_Coordinates as mc
+for (FPID, File, Par) in OriginalPars:
+    (Six, Eight, NE, E) = mc.find_coordinates(Par)
+    for el in Six:
+        Sixers.append(el)
+    for el in Eight:
+        Eighters.append(el)
+    for el in NE:
+        NotFound.append(el)
+    for el in E:
+        Errors.append(el)
+
+
+
+
+Dataset = []
+Numbers = [0,0,0]
+for (Coords, Regex, SplitPar) in Sixers:
+    if len(SplitPar) < Maxlength:
+        Dataset.append((Coords, 6, split_string(SplitPar)))
+        Numbers[0] += 1
+for (Coords, Regex, SplitPar) in Eighters:
+    if len(SplitPar) < Maxlength:
+        Dataset.append((Coords, 8, split_string(SplitPar)))
+        Numbers[1] += 1
+for SplitPar in NotFound:
+    if len(SplitPar) < Maxlength:
+        Dataset.append(([], 0, split_string(SplitPar)))
+        Numbers[2] += 1
+print(Numbers)
+
+Datasets = []
+Datasets.append((Dataset, "Real))
+
+FakeDataFile = open(CurDir + "/Files/FakeData_b_bc".pickle, "rb")
+Dataset = pickle.load(FakeDataFile)
+Datasets.append((Dataset, "Fake"))
         
-    if modeltype == "a_bc" or modeltype == "b_bc":
-        PreTrainedModel = 'bert-base-cased'
-        from transformers import BertTokenizerFast
-        Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
-        from transformers import BertForTokenClassification
-        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
-    if modeltype == "a_bu" or modeltype == "b_bu":
-        PreTrainedModel = 'bert-base-uncased'
-        from transformers import BertTokenizerFast
-        Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
-        from transformers import BertForTokenClassification
-        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+def get_label(Str, Model, Tokenizer):
+    StrEnc = Tokenizer(Str, return_tensors='pt').to(device)
+    Output = Model(**StrEnc)
+    Softmaxed = Output.logits.softmax(-1)
+    Labels = []
+    for labels in Softmaxed[0]:
+        lblcur = []
+        for lbl in labels:
+            lblcur.append(lbl.item())
+        Labels.append(lblcur)
+    return Labels[:-1] # SEP
 
 
-    import sqlite3
-    import pickle
-    FakeDataFile = open(CurDir + "/Files/FakeData_" + modeltype + ".pickle", "rb")
-    Dataset = pickle.load(FakeDataFile)
-    OriginalPars = []
-    for ((ID, Splitpar), PotCoords, Labels) in Dataset:
-        OriginalPars.append((ID, Labels, PotCoords, Splitpar))
+def get_token_class(Tokens, Labels):
+    Classes = []
+    for i in range(len(Tokens)):
+        MaxClass = max(Labels[i])
+        CurClasses = []
+        for j in range(len(Labels[i])):
+            if Labels[i][j] == MaxClass:
+                CurClasses.append(j)
+        Classes.append(CurClasses)
+    return Classes
 
-    def labels_to_int():
-        LabelDict = {}
-        LabelDict["[CLS]"] = -100
-        LabelDict["[SEP]"] = -100
-        LabelDict["Nul"] = 0
-        LabelDict["Noise"] = 6
-        LabelDict["Grad"] = 1
-        LabelDict["Min"] = 2
-        LabelDict["Sek"] = 3
-        LabelDict["Latitude"] = 4
-        LabelDict["Longitude"] = 5
-        LabelDict["Padded"] = -100
-        IntToLabel = {}
-        IntToLabel[0] = "Nul"
-        IntToLabel[1] = "Grad"
-        IntToLabel[2] = "Min"
-        IntToLabel[3] = "Sek"
-        IntToLabel[4] = "Latitutde"
-        IntToLabel[5] = "Longitude"
-        IntToLabel[6] = "Noise"
-        IntToLabel[-100] = ["[SEP]","[CLS]", "Padded"]
-        return LabelDict, IntToLabel
-
-    LabelDict, IntLabelDict = labels_to_int()
-
-    
+def extract_relevant_classes(Tokens, Classes):
+    Relevant = []
+    for i in range(len(Tokens)):
+        for Element in Classes[i]:
+            PotClasses = []
+            if Element in [1, 2, 3, 4, 5]:
+                PotClasses.append(Element)
+        Relevant.append((Tokens[i], PotClasses))
+    return Relevant
 
 
+def Extend(List):
+    RList = []
+    for item in List:
+        for item2 in List:
+            RList.append(str(item) + str(item2))
+    RList = List + RList
+    return RList
+
+def ToCoords(RevTokens):
+    rnum = 0
+    Grad = []
+    Min = []
+    Sek = []
+    Lat = []
+    Long = []
+    for (Token, ClassList) in RevTokens:
+        if "#" not in Token:
+            for Class in ClassList:
+                if Class == 1:
+                    Grad.append(Token)
+                if Class == 2:
+                    Min.append(Token)
+                if Class == 3:
+                    Sek.append(Token)
+                if Class == 4:
+                    Lat.append(Token)
+                if Class == 5:
+                    Long.append(Token)
+    GradE = Extend(Grad)
+    MinE = Extend(Min)
+    SekE = Extend(Sek)
+    LatE = Extend(Lat)
+    LongE = Extend(Long)
+    DirE = Extend(LatE+LongE)
+    if len(SekE)>0:
+        rnum = 8
+    else:
+        rnum = 6
+    return(GradE, MinE, SekE, DirE, rnum)
 
 
-    Maxlength = 917
-    model.eval()
-    Dataset = []
-
-    Numbers = [0,0,0]
-    for (FPID, Label, PotCoords, Par) in OriginalPars:
-        if len(PotCoords)>0:
-            Dataset.append((PotCoords, len(PotCoords), Par))
-            if len(PotCoords) == 6:
-                Numbers[0] += 1
-            else:
-                Numbers[1] += 1
-        else:
-            Dataset.append(((), 0, Par))
-            Numbers[2] += 1
-
-    print(Numbers)
-            
-    def get_label(Str, Model, Tokenizer):
-        StrEnc = Tokenizer(Str, return_tensors='pt').to(device)
-        Output = Model(**StrEnc)
-        Softmaxed = Output.logits.softmax(-1)
-        Labels = []
-        for labels in Softmaxed[0]:
-            lblcur = []
-            for lbl in labels:
-                lblcur.append(lbl.item())
-            Labels.append(lblcur)
-        return Labels[1:-1] # CLS and SEP
-
-
-    def get_token_class(Tokens, Labels):
-        Classes = []
-        for i in range(len(Tokens)):
-            MaxClass = max(Labels[i])
-            CurClasses = []
-            for j in range(len(Labels[i])):
-                if Labels[i][j] == MaxClass:
-                    CurClasses.append(j)
-            Classes.append(CurClasses)
-        return Classes
-
-    def extract_relevant_classes(Tokens, Classes):
-        Relevant = []
-        for i in range(len(Tokens)):
-            for Element in Classes[i]:
-                PotClasses = []
-                if Element in [1, 2, 3, 4, 5]:
-                    PotClasses.append(Element)
-            Relevant.append((Tokens[i], PotClasses))
-        return Relevant
-
-
-    def Extend(List):
-        RList = []
-        for item in List:
-            for item2 in List:
-                RList.append(str(item) + str(item2))
-        RList = List + RList
-        return RList
-
-    def ToCoords(RevTokens):
-        rnum = 0
-        Grad = []
-        Min = []
-        Sek = []
-        Lat = []
-        Long = []
-        for (Token, ClassList) in RevTokens:
-            if "#" not in Token:
-                for Class in ClassList:
-                    if Class == 1:
-                        Grad.append(Token)
-                    if Class == 2:
-                        Min.append(Token)
-                    if Class == 3:
-                        Sek.append(Token)
-                    if Class == 4:
-                        Lat.append(Token)
-                    if Class == 5:
-                        Long.append(Token)
-        GradE = Extend(Grad)
-        MinE = Extend(Min)
-        SekE = Extend(Sek)
-        LatE = Extend(Lat)
-        LongE = Extend(Long)
-        DirE = Extend(LatE+LongE)
-        if len(SekE)>0:
-            rnum = 8
-        else:
-            rnum = 6
-        return(GradE, MinE, SekE, DirE, rnum)
-
+for (Dataset, RealOrFake) in Datasets:
     Resultsdict = {}
     o1 = "NullEins"
     o0 = "NullNull"
@@ -201,12 +216,14 @@ for modeltype in potmodels:
     HitDict = {}
     for i in range(9):
         HitDict[i] = 0
-    print("Starting with " + modeltype)
+    print("Starting with " + RealOrFake)
     for (PotCords, LenCoords, SplitPar) in Dataset:
         if len(SplitPar)<Maxlength:
             Tokens = Tokenizer.tokenize(SplitPar)
             Labels = get_label(SplitPar, model, Tokenizer)
             Classes = get_token_class(Tokens, Labels)
+            RevTokens = extract_relevant_classes(Tokens, Classes)
+
             FoundRele = False
             for (Token, Labellist) in RevTokens:
                 for lbl in Labellist:
@@ -225,10 +242,9 @@ for modeltype in potmodels:
 
                 (GradE, MinE, SekE, DirE, rnum) = ToCoords(RevTokens)
                 ReturnCoords = []
-                
+                Found = True
                 for i in range(LenCoords):
                     ReturnCoords.append(False)
-                Hits = 0
                 if LenCoords == 8:
                     for grad in GradE:
                         if (not ReturnCoords[0]) and grad == PotCords[0]:
@@ -283,14 +299,17 @@ for modeltype in potmodels:
                         Resultsdict[B0N] += 1
             Runner+=1
             if Runner%1000==0:
-                #print(str(Runner) + "/" + str(len(Dataset)))
+                print(str(Runner) + "/" + str(len(Dataset)))
                 pass
+                
 
 
             
     results_list = []
 
-    ModName = "TC1" + modeltype + "_Fakedata"
+
+    ModName = "TC1CLS_" + RealOrFake + "data"
+
 
     results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
                          , Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N], 100)) 
@@ -342,15 +361,16 @@ for modeltype in potmodels:
                 );"""
         Cur.execute(sql_command)
         Con.commit()
-    
+        
     sql_command = "INSERT INTO Results VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     Cur.executemany(sql_command, results_list)
     Con.commit()
     sql_command = "INSERT INTO HitDicts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    results_list = [(modeltype + "_Fake", HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8], Numbers[0], Numbers[1], Numbers[2])]
+    results_list = [(modeltype + "_" + RealOrFake, HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8], Numbers[0], Numbers[1], Numbers[2])]
     Cur.executemany(sql_command, results_list)
     Con.commit()
     Con.close()
-    print("Finished " + modeltype)
 
+    print("Finished " + RealOrFake)
 
+        
