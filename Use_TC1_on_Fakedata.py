@@ -207,6 +207,7 @@ for modeltype in potmodels:
             Tokens = Tokenizer.tokenize(SplitPar)
             Labels = get_label(SplitPar, model, Tokenizer)
             Classes = get_token_class(Tokens, Labels)
+            RevTokens = extract_relevant_classes(Tokens, Classes)
             FoundRele = False
             for (Token, Labellist) in RevTokens:
                 for lbl in Labellist:
