@@ -21,7 +21,7 @@ NumOfEpochs = 3
 Batch_Size_Train = 8
 
 CurDir = os.getcwd()
-FakeDataFile = open(CurDir + "/Files/FakeData_" + modeltype +".pickle", "rb")
+FakeDataFile = open(CurDir + "/Files/FakeData_b_bc" + ".pickle", "rb")
 Dataset = pickle.load(FakeDataFile)
 NumOfTraining = int(len(Dataset)/100*TrainTestRatio)
 
