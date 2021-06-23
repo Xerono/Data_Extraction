@@ -246,7 +246,11 @@ for modeltype in potmodels:
             RevTokens = extract_relevant_classes(Tokens, Classes)
 
             if LenCoords == 0:
-                if len(RevTokens)>0:
+                Found = False
+                for (Token, Labellist) in RevTokens:
+                    for lbl in Labellist:
+                        Found = True
+                if Found:
                     Resultsdict[10] += 1
                 else:
                     Resultsdict[o0] += 1
