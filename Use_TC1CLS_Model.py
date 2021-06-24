@@ -1,8 +1,8 @@
 import os
+import pickle
 
 
-
-for modeltype in potmodels:
+modeltype = "TC1CLS"
 CurDir = os.getcwd()
 
 ModPath = CurDir + "/Models/"
@@ -12,7 +12,6 @@ Model_Path = ModPath + "TC1CLS_Model_Coordinates/"
 import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 PreTrainedModel = 'bert-base-cased'
 from transformers import BertTokenizerFast
@@ -97,27 +96,39 @@ for (FPID, File, Par) in OriginalPars:
 
 
 Dataset = []
-Numbers = [0,0,0]
+NumbersTrue = [0,0,0]
 for (Coords, Regex, SplitPar) in Sixers:
     if len(SplitPar) < Maxlength:
         Dataset.append((Coords, 6, split_string(SplitPar)))
-        Numbers[0] += 1
+        NumbersTrue[0] += 1
 for (Coords, Regex, SplitPar) in Eighters:
     if len(SplitPar) < Maxlength:
         Dataset.append((Coords, 8, split_string(SplitPar)))
-        Numbers[1] += 1
+        NumbersTrue[1] += 1
 for SplitPar in NotFound:
     if len(SplitPar) < Maxlength:
         Dataset.append(([], 0, split_string(SplitPar)))
-        Numbers[2] += 1
-print(Numbers)
+        NumbersTrue[2] += 1
+
 
 Datasets = []
-Datasets.append((Dataset, "Real))
+Datasets.append((Dataset, "Real"))
 
-FakeDataFile = open(CurDir + "/Files/FakeData_b_bc".pickle, "rb")
-Dataset = pickle.load(FakeDataFile)
+FakeDataFile = open(CurDir + "/Files/FakeData_b_bc.pickle", "rb")
+Dataset = []
+NumbersFake = [0,0,0]
+DatasetPre = pickle.load(FakeDataFile)
+for ((ID, Splitpar), PotCoords, Labels) in DatasetPre:
+    Dataset.append((PotCoords, len(PotCoords), Splitpar))
+    if len(PotCoords) == 6:
+        NumbersFake[0] += 1
+    else:
+        if len(PotCoords) == 8:
+            NumbersFake[1] += 1
+        else:
+            NumbersFake[2] += 1
 Datasets.append((Dataset, "Fake"))
+
         
 def get_label(Str, Model, Tokenizer):
     StrEnc = Tokenizer(Str, return_tensors='pt').to(device)
@@ -366,6 +377,11 @@ for (Dataset, RealOrFake) in Datasets:
     Cur.executemany(sql_command, results_list)
     Con.commit()
     sql_command = "INSERT INTO HitDicts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    Numbers = [0, 0, 0]
+    if RealOrFake == "Real":
+        Numbers = NumbersTrue
+    else:
+        Numbers = NumbersFake
     results_list = [(modeltype + "_" + RealOrFake, HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8], Numbers[0], Numbers[1], Numbers[2])]
     Cur.executemany(sql_command, results_list)
     Con.commit()
