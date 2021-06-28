@@ -1,9 +1,42 @@
 import os
 
+RealData = True
+OnlyShowFoundTokens = True
 
 
 modeltype = "a_bc"
+modeltype = "a_dc"
+modeltype = "a_bu"
+modeltype = "a_du"
 
+modeltype = "b_bc"
+modeltype = "b_dc"
+modeltype = "b_bu"
+modeltype = "b_du"
+
+modeltype = "r_bc"
+modeltype = "r_dc"
+modeltype = "r_bu"
+modeltype = "r_du"
+
+modeltype = "t_bc"
+modeltype = "t_dc"
+
+#modeltype = "CLS"
+
+    
+import transformers
+import torch
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+from transformers import BertTokenizerFast
+from transformers import DistilBertTokenizerFast
+
+from transformers import BertForTokenClassification
+from transformers import DistilBertForTokenClassification
+
+import os
 
 CurDir = os.getcwd()
 
@@ -11,24 +44,42 @@ ModPath = CurDir + "/Models/"
 
 Model_Path = ModPath + "TC1" + modeltype + "_Model_Coordinates/"
 
-import transformers
-import torch
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if modeltype == "CLS" or modeltype.split("_")[1] == "bc":
+    PreTrainedModel = 'bert-base-cased'
+    Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
+    if modeltype == "CLS":
+        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=9).to(device)
+    else:
+        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+else:
+    if modeltype.split("_")[1] == "dc":
+        PreTrainedModel = 'distilbert-base-cased'
+        model = DistilBertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
+        
+    if modeltype.split("_")[1] == "bu":
+        PreTrainedModel = 'bert-base-uncased'
+        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
 
-PreTrainedModel = 'bert-base-cased'
-from transformers import BertTokenizerFast
-Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
-from transformers import BertForTokenClassification
-model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
-import sqlite3
-Database = CurDir + "/Files/Database.db"
-Con = sqlite3.connect(Database)
-Cur = Con.cursor()
-xs = "Select * FROM Pars"
-OriginalPars = Cur.execute(xs).fetchall()
-Con.close()
-Maxlength = 917
+    if modeltype.split("_")[1] == "du":
+        PreTrainedModel = 'distilbert-base-uncased'
+        model = DistilBertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+        Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
+
+
+
+if modeltype == "CLS":
+    fdfile = "b_bc"
+else:
+    if modeltype.split("_")[0] == "r":
+        fdfile = False
+    else:
+        fdfile = modeltype
+
 model.eval()
+
+Maxlength = 917
 
 def split_string(Par):
     ParSpl = Par.split(" ")
@@ -48,35 +99,7 @@ def split_string(Par):
         Returnpar = Returnpar + " " + word
     return Returnpar
 
-Sixers = []
-Eighters = []
-Errors = []
-NotFound = []
-import Module_Coordinates as mc
-for (FPID, File, Par) in OriginalPars:
-    (Six, Eight, NE, E) = mc.find_coordinates(Par)
-    for el in Six:
-        Sixers.append(el)
-    for el in Eight:
-        Eighters.append(el)
-    for el in NE:
-        NotFound.append(el)
-    for el in E:
-        Errors.append(el)
-Dataset = []
-Numbers = [0,0,0]
-for (Coords, Regex, SplitPar) in Sixers:
-    if len(SplitPar) < Maxlength:
-        Dataset.append((Coords, 6, split_string(SplitPar)))
-        Numbers[0] += 1
-for (Coords, Regex, SplitPar) in Eighters:
-    if len(SplitPar) < Maxlength:
-        Dataset.append((Coords, 8, split_string(SplitPar)))
-        Numbers[1] += 1
-for SplitPar in NotFound:
-    if len(SplitPar) < Maxlength:
-        Dataset.append(([], 0, split_string(SplitPar)))
-        Numbers[2] += 1
+
 
 
 def labels_to_int():
@@ -169,19 +192,124 @@ def ToCoords(RevTokens):
         rnum = 6
     return(GradE, MinE, SekE, DirE, rnum)
 
-for (PotCords, LenCoords, SplitPar) in Dataset:
-    Found = False
-    if len(SplitPar)<Maxlength:
-        Tokens = Tokenizer.tokenize(SplitPar)
-        Labels = get_label(SplitPar, model, Tokenizer)
-        Classes = get_token_class(Tokens, Labels)
-        RevTokens = extract_relevant_classes(Tokens, Classes)
-
-        print(SplitPar)
-        print(PotCords)
-        for (Token, Label) in RevTokens:
-            for lbl in Label:
-                print(Token + "   |   " + IntToLabel[lbl])
-                Found = True
-        if Found:
-            input()
+if RealData:
+    import sqlite3
+    Database = CurDir + "/Files/Database.db"
+    Con = sqlite3.connect(Database)
+    Cur = Con.cursor()
+    xs = "Select * FROM Pars"
+    OriginalPars = Cur.execute(xs).fetchall()
+    Con.close()
+    
+    Sixers = []
+    Eighters = []
+    Errors = []
+    NotFound = []
+    import Module_Coordinates as mc
+    for (FPID, File, Par) in OriginalPars:
+        (Six, Eight, NE, E) = mc.find_coordinates(Par)
+        for el in Six:
+            Sixers.append(el)
+        for el in Eight:
+            Eighters.append(el)
+        for el in NE:
+            NotFound.append(el)
+        for el in E:
+            Errors.append(el)
+    Dataset = []
+    Numbers = [0,0,0]
+    for (Coords, Regex, SplitPar) in Sixers:
+        if len(SplitPar) < Maxlength:
+            Dataset.append((Coords, 6, split_string(SplitPar)))
+            Numbers[0] += 1
+    for (Coords, Regex, SplitPar) in Eighters:
+        if len(SplitPar) < Maxlength:
+            Dataset.append((Coords, 8, split_string(SplitPar)))
+            Numbers[1] += 1
+    for SplitPar in NotFound:
+        if len(SplitPar) < Maxlength:
+            Dataset.append(([], 0, split_string(SplitPar)))
+            Numbers[2] += 1    
+    Dataset = []
+    Numbers = [0,0,0]
+    for (Coords, Regex, SplitPar) in Sixers:
+        if len(SplitPar) < Maxlength:
+            Dataset.append((Coords, 6, split_string(SplitPar)))
+            Numbers[0] += 1
+    for (Coords, Regex, SplitPar) in Eighters:
+        if len(SplitPar) < Maxlength:
+            Dataset.append((Coords, 8, split_string(SplitPar)))
+            Numbers[1] += 1
+    for SplitPar in NotFound:
+        if len(SplitPar) < Maxlength:
+            Dataset.append(([], 0, split_string(SplitPar)))
+            Numbers[2] += 1
+    Runner = 0
+    for (PotCords, LenCoords, SplitPar) in Dataset:
+        Runner+=1
+        if Runner%1000 == 0:
+            print(str(Runner) + "/" + str(len(Dataset)))
+        if len(SplitPar)<Maxlength:
+            Tokens = Tokenizer.tokenize(SplitPar)
+            Labels = get_label(SplitPar, model, Tokenizer)
+            Classes = get_token_class(Tokens, Labels)
+            RevTokens = extract_relevant_classes(Tokens, Classes)
+            Found = False
+            wrds = []
+            for (Token, Label) in RevTokens:
+                for lbl in Label:
+                    wrds.append(Token + "   |   " + IntToLabel[lbl])
+                    Found = True
+            if OnlyShowFoundTokens:
+                if Found:
+                    print(SplitPar)
+                    print(PotCords)
+                    for wrd in wrds:
+                        print(wrd)
+                    input()
+            else:
+                print(SplitPar)
+                print(PotCords)
+                if Found:
+                    for wrd in wrds:
+                        print(wrd)
+                    input()
+else:
+    if not fdfile:
+        print("Real models don't have fake data")
+    else:
+        import pickle
+        FakeDataFile = open(os.getcwd() + "/Files/FakeData_" + fdfile + ".pickle", "rb")
+        fdata = pickle.load(FakeDataFile)
+        Numbers = fdata[0]
+        Dataset = fdata[1:]
+        Runner = 0
+        for ((ID, SplitPar), PotCords, Labellist) in Dataset:
+            Runner+=1
+            if Runner%1000 == 0:
+                print(str(Runner) + "/" + str(len(Dataset)))
+            if len(SplitPar)<Maxlength:
+                Tokens = Tokenizer.tokenize(SplitPar)
+                Labels = get_label(SplitPar, model, Tokenizer)
+                Classes = get_token_class(Tokens, Labels)
+                RevTokens = extract_relevant_classes(Tokens, Classes)
+                Found = False
+                wrds = []
+                for (Token, Label) in RevTokens:
+                    for lbl in Label:
+                        wrds.append(Token + "   |   " + IntToLabel[lbl])
+                        Found = True
+                if OnlyShowFoundTokens:
+                    if Found:
+                        print(SplitPar)
+                        print(PotCords)
+                        for wrd in wrds:
+                            print(wrd)
+                        input()
+                else:
+                    print(SplitPar)
+                    print(PotCords)
+                    if Found:
+                        for wrd in wrds:
+                            print(wrd)
+                        input()

@@ -28,7 +28,7 @@ for modeltype in potmodels:
             from transformers import DistilBertForTokenClassification
             model = DistilBertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=8)
             FakeDataFile = open(CurDir + "/Files/FakeData_t_dc.pickle", "rb")
-        if modeltype == "bc
+        if modeltype == "bc":
             PreTrainedModel = 'bert-base-cased'
             from transformers import BertTokenizerFast
             Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)

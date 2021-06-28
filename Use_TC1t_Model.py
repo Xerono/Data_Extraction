@@ -9,7 +9,7 @@ for modeltype in modelsorig:
 
     ModPath = CurDir + "/Models/"
 
-    Model_Path = ModPath + "TC1t" + modeltype + "_Model_Coordinates/"
+    Model_Path = ModPath + "TC1t_" + modeltype + "_Model_Coordinates/"
 
     import torch
 
@@ -129,7 +129,7 @@ for modeltype in modelsorig:
     NumbersFake = [0,0,0]
     DatasetPre = pickle.load(FakeDataFile)
     NumNum = DatasetPre[0]
-    DatasetPre[1:]
+    DatasetPre = DatasetPre[1:]
     print(NumNum)
     for ((ID, Splitpar), PotCoords, Labels) in DatasetPre:
         Dataset.append((PotCoords, len(PotCoords), Splitpar))
@@ -266,7 +266,6 @@ for modeltype in modelsorig:
 
                     (GradE, MinE, SekE, DirE, rnum) = ToCoords(RevTokens)
                     ReturnCoords = []
-                    Found = True
                     for i in range(LenCoords):
                         ReturnCoords.append(False)
                     if LenCoords == 8:
@@ -332,7 +331,7 @@ for modeltype in modelsorig:
         results_list = []
 
 
-        ModName = "TC1t_" + modeltype + "_" RealOrFake + "data"
+        ModName = "TC1t_" + modeltype + "_" + RealOrFake + "data"
 
 
         results_list.append((ModName, Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0]
