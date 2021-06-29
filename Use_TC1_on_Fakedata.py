@@ -247,10 +247,11 @@ for modeltype in potmodels:
                         if (not ReturnCoords[6]) and sek == PotCords[6]:
                             ReturnCoords[6] = sek
                     for dire in DirE:
-                        if (not ReturnCoords[3]) and dire == PotCords[3]:
-                            ReturnCoords[3] = dire
-                        if (not ReturnCoords[7]) and dire == PotCords[7]:
-                            ReturnCoords[7] = dire
+                        diru = dire.upper()
+                        if (not ReturnCoords[3]) and diru == PotCords[3]:
+                            ReturnCoords[3] = diru
+                        if (not ReturnCoords[7]) and diru == PotCords[7]:
+                            ReturnCoords[7] = diru
                 else:
                     for grad in GradE:
                         if (not ReturnCoords[0]) and grad == PotCords[0]:
@@ -263,10 +264,11 @@ for modeltype in potmodels:
                         if (not ReturnCoords[4]) and mint == PotCords[4]:
                             ReturnCoords[4] = mint
                     for dire in DirE:
-                        if (not ReturnCoords[2]) and dire == PotCords[2]:
-                            ReturnCoords[2] = dire
-                        if (not ReturnCoords[5]) and dire == PotCords[5]:
-                            ReturnCoords[5] = dire
+                        diru = dire.upper()
+                        if (not ReturnCoords[2]) and diru == PotCords[2]:
+                            ReturnCoords[2] = diru
+                        if (not ReturnCoords[5]) and diru == PotCords[5]:
+                            ReturnCoords[5] = diru
                 Hits = 0
                 Found = True
                 for i in range(len(ReturnCoords)):
