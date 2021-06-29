@@ -1,7 +1,7 @@
 import os
 import pickle
 
-
+Debug = False
 modelsorig = ["bc", "dc"]
 
 for modeltype in modelsorig:
@@ -120,7 +120,7 @@ for modeltype in modelsorig:
 
 
     Datasets = []
-    Datasets.append((Dataset, "Real"))
+    #Datasets.append((Dataset, "Real"))
 
     
     FakeDataFile = open(CurDir + "/Files/FakeData_t_" + modeltype + ".pickle", "rb")
@@ -153,7 +153,7 @@ for modeltype in modelsorig:
             for lbl in labels:
                 lblcur.append(lbl.item())
             Labels.append(lblcur)
-        return Labels[:-1] # SEP
+        return Labels[1:-1] # CLS + SEP
 
 
     def get_token_class(Tokens, Labels):
@@ -321,6 +321,14 @@ for modeltype in modelsorig:
                         else:
                             Resultsdict[B0N] += 1
                 Runner+=1
+                if Debug and FoundRele:
+                    for (Token, Labellist) in RevTokens:
+                        for lbl in Labellist:
+                            print(Token + " | " + str(IntLabelDict[lbl]))
+                    print(PotCords)
+                    print(ReturnCoords)
+                    print(SplitPar)
+                    input()
                 if Runner%20000==0:
                     print(str(Runner) + "/" + str(len(Dataset)))
                     pass

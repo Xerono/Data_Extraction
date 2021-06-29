@@ -1,6 +1,6 @@
 import os
 
-RealData = True
+RealData = False
 OnlyShowFoundTokens = True
 
 
@@ -20,7 +20,7 @@ modeltype = "r_bu"
 modeltype = "r_du"
 
 modeltype = "t_bc"
-modeltype = "t_dc"
+#modeltype = "t_dc"
 
 #modeltype = "CLS"
 
