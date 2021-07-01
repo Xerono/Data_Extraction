@@ -78,7 +78,7 @@ Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
 
 Symbols = ["•", "H", "V", "¢", ".", "j", "J", "°", ",", ";", "Њ", "Ј", "U",
                '"', "″", "'", "o", "@", "؇", "-", "¶", "(", ")", "Љ", "±",
-               ":", "µ", "/", " ",
+               ":", "µ", "/",
                "8", "9"] # Found by trial & error
 
 
