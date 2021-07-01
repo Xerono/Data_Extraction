@@ -2,7 +2,7 @@ import os
 import pickle
 
 Debug = False
-modelsorig = ["bc", "dc"]
+modelsorig = ["dc", "bc"]
 
 for modeltype in modelsorig:
     CurDir = os.getcwd()
@@ -120,7 +120,7 @@ for modeltype in modelsorig:
 
 
     Datasets = []
-    Datasets.append((Dataset, "Real"))
+    #Datasets.append((Dataset, "Real"))
 
     
     FakeDataFile = open(CurDir + "/Files/FakeData_t_" + modeltype + ".pickle", "rb")

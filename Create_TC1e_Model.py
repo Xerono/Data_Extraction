@@ -1,10 +1,10 @@
 
 
-Basemodel = "distilbert-base-uncased"
+Basemodel = "bert-base-cased"
 Randomseed = 34535587
 PadLength = 300
 MaxLength = 900
-Max_Steps = 100
+Max_Steps = 1000
 
 
 import random
