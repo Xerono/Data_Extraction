@@ -1,7 +1,7 @@
 
 
 Basemodel = "bert-base-cased"
-Basemodel = "distilbert-base-uncased"
+#Basemodel = "distilbert-base-uncased"
 Randomseed = 34535587
 PadLength = 300
 MaxLength = 900
@@ -288,9 +288,11 @@ def Replace(ParCord):
             for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
                 if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
                     for j in range(len(Labellist)):
-                        try
+                        try:
                             FullLabels[i+j] = Labellist[j]
                         except:
+                            print("i:")
+                            print(i)
                             print("j:")
                             print(j)
                             print("Fulllabels")
