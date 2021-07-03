@@ -382,7 +382,7 @@ while not ConvergenceFound and time.time() - starttime < Stoptime :
             Diff_History.append(Diff)
             
 endtime = time.time()
-print(len(loss_history)
+print(len(loss_history))
 FullTime = endtime - starttime
 print(FullTime)
 ModName = "TC1e_bc_Model_Coordinates/"
