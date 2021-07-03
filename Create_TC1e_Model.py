@@ -357,7 +357,7 @@ ConvergenceFound = False
 import time
 
 starttime = time.time()
-while not ConvergenceFound or time.time() - starttime> Stoptime :
+while not ConvergenceFound and time.time() - starttime < Stoptime :
     for batch in Training_Loader:
         optim.zero_grad()
         input_ids = batch['input_ids'].to(device)
