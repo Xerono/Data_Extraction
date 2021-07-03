@@ -1,19 +1,20 @@
 
 
-#Basemodel = "bert-base-cased"
-Basemodel = "distilbert-base-uncased"
-Randomseed = 34535587
+Basemodel = "bert-base-cased"
+#Basemodel = "distilbert-base-uncased"
+Randomseed = 613513
 PadLength = 300
 MaxLength = 900
-Max_Steps = 1000
+DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
+ConvergenceLimit = 0.0001
+BackView = 100
+Stoptime = 28800 # 8 hours
+Batch_Size_Train = 8
 
 
 import random
 
 random.seed(Randomseed)
-
-
-
 
 import os
 import sqlite3
@@ -268,7 +269,6 @@ def generate_six_coords():
 
 
 def Replace(ParCord):
-    Error = False
     (Par, ListOfCoords) = ParCord
     FullNewCoords = []
     for (Coord, String) in ListOfCoords:
@@ -288,26 +288,7 @@ def Replace(ParCord):
             for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
                 if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
                     for j in range(len(Labellist)):
-                        try:
-                            FullLabels[i+j] = Labellist[j]
-                        except:
-                            print("i:")
-                            print(i)
-                            print("j:")
-                            print(j)
-                            print("Fulllabels")
-                            print(FullLabels)
-                            print("Labellist")
-                            print(Labellist)
-                            print("tknsp")
-                            print(TokenizedSplitPar)
-                            print("Cordssplit")
-                            print(CoordsSplit)
-                            Error = True
-                            input()
-        if Error:
-            SplitPar = []
-            FullLabels = []
+                        FullLabels[i+j] = Labellist[j]
         return (SplitPar, FullLabels)
 
 
@@ -329,7 +310,6 @@ class Dataset(torch.utils.data.Dataset):
         (SP, Labels) = Replace(PwC[0])
         TSP = Tokenizer(SP)
         Attentionmask = []
-        
         for i in range(len(Labels)):
             if Labels[i] == 0:
                 if random.choice([1,2,3]) == 1:
@@ -347,45 +327,69 @@ class Dataset(torch.utils.data.Dataset):
             Attentionmask.append(0)
 
         item = {}
-        item['input_ids'] =  TSPcoded
-        item['labels'] = Labels
-        item['attention_mask'] = Attentionmask       
+        item['input_ids'] =  torch.tensor(TSPcoded)
+        item['labels'] = torch.tensor(Labels)
+        item['attention_mask'] = torch.tensor(Attentionmask)       
         return item
 
     def __len__(self):
-        return PadLength
+        return DatasetLength
+
+TrainData = Dataset()
+TestData = Dataset()
 
 
+from transformers import AdamW
+from torch.utils.data import DataLoader
+optim = AdamW(Model.parameters(), lr=5e-5)
+Training_Loader = DataLoader(TrainData, batch_size = Batch_Size_Train)
 
 
-Data = Dataset()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+Model.to(device)
 
-NumOfEpochs = 8
-Batch_Size_Train = 8
-Batch_Size_Eval = Batch_Size_Train
+loss_history = []
+Diff_History = []
+convergence = []
 
-training_args = TrainingArguments(
-    output_dir= CurDir + '/Results/Outputs/',          # output directory
-    num_train_epochs=NumOfEpochs,              # total number of training epochs
-    per_device_train_batch_size=Batch_Size_Train,  # batch size per device during training
-    per_device_eval_batch_size=Batch_Size_Eval,   # batch size for evaluation
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
-    weight_decay=0.01,               # strength of weight decay
-    logging_dir= CurDir + '/Results/Logs/',            # directory for storing logs
-    logging_steps=10,
-    max_steps = Max_Steps,
-    seed = Randomseed
-)
+ConvergenceFound = False
 
-trainer = Trainer(
-    model=Model,                         # the instantiated 🤗 Transformers model to be trained
-    args=training_args,                  # training arguments, defined above
-    train_dataset=Data,         # training dataset
-    eval_dataset=Data             # evaluation dataset
-)
+import time
 
-trainer.train()
-
+starttime = time.time()
+while not ConvergenceFound or time.time() - starttime> Stoptime :
+    for batch in Training_Loader:
+        optim.zero_grad()
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        labels = batch['labels'].to(device)
+        outputs = Model(input_ids, attention_mask=attention_mask, labels=labels)
+        loss = outputs[0]
+        loss.backward()
+        optim.step()
+        lossnum = loss.item()
+        loss_history.append(lossnum)
+        convergence.append(lossnum)
+        if len(convergence) == BackView + 1:
+            avg = 0
+            for i in range(BackView):
+                avg += convergence[i]
+            LastLoss = avg/BackView
+            Diff = LastLoss - convergence[BackView]
+            if abs(Diff) < ConvergenceLimit:
+                ConvergenceFound = True
+            convergence = convergence[1:]
+            Diff_History.append(Diff)
+            
+endtime = time.time()
+print(len(loss_history)
+FullTime = endtime - starttime
+print(FullTime)
 ModName = "TC1e_bc_Model_Coordinates/"
 Model.save_pretrained(CurDir + "/Models/" + ModName)
+print("Model saved.")
+import pickle
+HistoryOutputPlace = CurDir + "/Results/" + "TC1e_History_" + str(FullTime) + ".pickle"
+with open(HistoryOutputPlace, "wb") as file:
+    pickle.dump(loss_history, file)
 print("Finished.")

@@ -292,8 +292,8 @@ for modeltype in potmodels:
             for i in range(len(item['input_ids'])-len(self.labels[idx])):
                 labelcopy.append(-100)
             item['labels'] = torch.tensor(labelcopy)
-            print(item.keys())
-            print(item)
+            #print(item.keys())
+            #print(item)
             return item
 
         def __len__(self):
