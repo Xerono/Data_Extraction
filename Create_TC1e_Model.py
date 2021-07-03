@@ -1,7 +1,7 @@
 
 
-Basemodel = "bert-base-cased"
-#Basemodel = "distilbert-base-uncased"
+#Basemodel = "bert-base-cased"
+Basemodel = "distilbert-base-uncased"
 Randomseed = 34535587
 PadLength = 300
 MaxLength = 900
