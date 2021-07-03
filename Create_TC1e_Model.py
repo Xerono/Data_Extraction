@@ -3,7 +3,7 @@
 Basemodel = "bert-base-cased"
 #Basemodel = "distilbert-base-uncased"
 Randomseed = 613513
-PadLength = 300
+PadLength = 320
 MaxLength = 900
 DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
 ConvergenceLimit = 0.0001
