@@ -316,7 +316,6 @@ from transformers import Trainer, TrainingArguments
 
 class Dataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
-        print("Item")
         random.shuffle(PwC)
         (SP, Labels) = Replace(PwC[0])
         TSP = Tokenizer(SP)
