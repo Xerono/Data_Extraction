@@ -4,11 +4,11 @@ Basemodel = "bert-base-cased"
 #Basemodel = "distilbert-base-uncased"
 Randomseed = 613513
 PadLength = 320
-DatasetLength = 100000 # Datasetlength / Batch size = Iterations per Epoch
+DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
 ConvergenceLimit = 0.0001
 BackView = 100
 Stoptime = 28800 # 8 hours
-Batch_Size_Train = 8
+Batch_Size_Train = 100
 Learning_Rate = 5e-5
 
 Parameters = {}
@@ -33,7 +33,7 @@ CurDir = os.getcwd()
 Database = CurDir + "/Files/Database.db"
 Con = sqlite3.connect(Database)
 Cur = Con.cursor()
-MaxLength = 917
+Maxlength = 917
 xs = "Select * FROM Pars"
 OriginalPars = Cur.execute(xs).fetchall()
 Con.close()
@@ -359,7 +359,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Model.to(device)
 
 loss_history = []
-Diff_History = []
 convergence = []
 
 ConvergenceFound = False
@@ -389,9 +388,8 @@ while not ConvergenceFound and time.time() - starttime < Stoptime :
             if abs(Diff) < ConvergenceLimit:
                 ConvergenceFound = True
             convergence = convergence[1:]
-            print(Diff)
-            Diff_History.append(Diff)
-            
+
+           
 endtime = time.time()
 print(len(loss_history))
 FullTime = endtime - starttime
