@@ -4,13 +4,23 @@ Basemodel = "bert-base-cased"
 #Basemodel = "distilbert-base-uncased"
 Randomseed = 613513
 PadLength = 320
-MaxLength = 900
 DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
 ConvergenceLimit = 0.0001
 BackView = 100
 Stoptime = 28800 # 8 hours
-Batch_Size_Train = 8
+Batch_Size_Train = 100
+Learning_Rate = 5e-5
 
+Parameters = {}
+Parameters["Basemodel"] = Basemodel
+Parameters["Randomseed"] = Randomseed
+Parameters["PadLength"] = PadLength
+Parameters["DatasetLength"] = DatasetLength
+Parameters["ConvergenceLimit"] = ConvergenceLimit
+Parameters["BackView"] = BackView
+Parameters["Stoptime"] = Stoptime
+Parameters["Batch_Size_Train"] = Batch_Size_Train
+Parameters["Learning_Rate"] = Learning_Rate
 
 import random
 
@@ -341,7 +351,7 @@ TestData = Dataset()
 
 from transformers import AdamW
 from torch.utils.data import DataLoader
-optim = AdamW(Model.parameters(), lr=5e-5)
+optim = AdamW(Model.parameters(), lr=Learning_Rate)
 Training_Loader = DataLoader(TrainData, batch_size = Batch_Size_Train)
 
 
@@ -379,6 +389,7 @@ while not ConvergenceFound and time.time() - starttime < Stoptime :
             if abs(Diff) < ConvergenceLimit:
                 ConvergenceFound = True
             convergence = convergence[1:]
+            print(Diff)
             Diff_History.append(Diff)
             
 endtime = time.time()
@@ -392,4 +403,10 @@ import pickle
 HistoryOutputPlace = CurDir + "/Results/" + "TC1e_History_" + str(FullTime) + ".pickle"
 with open(HistoryOutputPlace, "wb") as file:
     pickle.dump(loss_history, file)
+
+Parameters["FullTime"] = FullTime
+Parameters["Len_los_history"] = len(loss_history)
+    
+with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
+    pickle.dump(Parameters, file)
 print("Finished.")

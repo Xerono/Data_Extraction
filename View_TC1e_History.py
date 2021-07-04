@@ -12,3 +12,9 @@ for file in Files:
 loss_history = pickle.load(open(Resultspath + File, "rb"))
 Used_Time = float(File.split("_")[2].split(".pickle")[0])
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+plt.plot(loss_history)
+plt.show()
