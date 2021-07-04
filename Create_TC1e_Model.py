@@ -4,11 +4,11 @@ Basemodel = "bert-base-cased"
 #Basemodel = "distilbert-base-uncased"
 Randomseed = 613513
 PadLength = 320
-DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
+DatasetLength = 100000 # Datasetlength / Batch size = Iterations per Epoch
 ConvergenceLimit = 0.0001
 BackView = 100
 Stoptime = 28800 # 8 hours
-Batch_Size_Train = 100
+Batch_Size_Train = 8
 Learning_Rate = 5e-5
 
 Parameters = {}
@@ -316,6 +316,7 @@ from transformers import Trainer, TrainingArguments
 
 class Dataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
+        print("Item")
         random.shuffle(PwC)
         (SP, Labels) = Replace(PwC[0])
         TSP = Tokenizer(SP)
