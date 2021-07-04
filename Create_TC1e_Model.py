@@ -33,7 +33,7 @@ CurDir = os.getcwd()
 Database = CurDir + "/Files/Database.db"
 Con = sqlite3.connect(Database)
 Cur = Con.cursor()
-Maxlength = 917
+MaxLength = 917
 xs = "Select * FROM Pars"
 OriginalPars = Cur.execute(xs).fetchall()
 Con.close()
