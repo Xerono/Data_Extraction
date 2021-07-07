@@ -494,7 +494,7 @@ for Cut_Par in Options:
                                 ConvergenceFound = True
                             convergence = convergence[1:]
                         
-                        if Counter % 1000 >= 0:
+                        if Counter % 1000 == 0:
                             print(str(int(Cut_Par)) + str(int(Coord_To_Noise)) + str(int(Delete_Teilcoords)) + str(int(Custom_Loss)) + " - " + str(Counter) + " with loss of " + str(lossnum))
                         Counter += 1
                            

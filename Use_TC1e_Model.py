@@ -6,21 +6,6 @@ Debug = False
 
 CurDir = os.getcwd()
 
-ModPath = CurDir + "/Models/"
-
-Model_Path = ModPath + "TC1e_bc_Model_Coordinates/"
-
-import torch
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-PreTrainedModel = 'bert-base-cased'
-from transformers import BertTokenizerFast
-Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
-from transformers import BertForTokenClassification
-model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
-
 
 import sqlite3
 Database = CurDir + "/Files/Database.db"
@@ -30,14 +15,10 @@ xs = "Select * FROM Pars"
 OriginalPars = Cur.execute(xs).fetchall()
 Con.close()
 
-import Module_Coordinates as mc
-
-
-LabelDict, IntLabelDict = mc.labels_to_int()
 
 
 Maxlength = 917
-model.eval()
+
 
 
 Sixers = []
@@ -73,6 +54,34 @@ for SplitPar in NotFound:
     if len(SplitPar) < Maxlength:
         Dataset.append(([], 0, mc.split_string(SplitPar)))
         Numbers[2] += 1
+
+
+
+ModPath = CurDir + "/Models/"
+
+Model_Path = ModPath + "TC1e_bc_Model_Coordinates/"
+
+import torch
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+PreTrainedModel = 'bert-base-cased'
+from transformers import BertTokenizerFast
+Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
+from transformers import BertForTokenClassification
+model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+model.eval()
+
+
+
+import Module_Coordinates as mc
+
+
+LabelDict, IntLabelDict = mc.labels_to_int()
+
+
+
 
 
 Resultsdict = {}
