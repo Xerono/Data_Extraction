@@ -1,5 +1,6 @@
-Basemodel = "bert-base-cased"
 Basemodel = "distilbert-base-uncased"
+Basemodel = "bert-base-cased"
+
 
 PadLength = 320
 DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
@@ -29,7 +30,7 @@ Parameters["Custom_Loss"] = Custom_Loss
 
 
 
-random.seed(Randomseed)
+
 
 import os
 import sqlite3
@@ -43,7 +44,7 @@ xs = "Select * FROM Pars"
 OriginalPars = Cur.execute(xs).fetchall()
 Con.close()
 
-
+random.seed(Randomseed)
 
 
 
@@ -430,6 +431,7 @@ for Cut_Par in Options:
     for Coord_To_Noise in Options:
         for Delete_Teilcoords in Options:
             for Custom_Loss in Options:
+                random.seed(Randomseed)
                 Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=8)
                 Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
                 optim = AdamW(Model.parameters(), lr=Learning_Rate)
