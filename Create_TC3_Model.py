@@ -4,9 +4,9 @@ Basemodel = "bert-base-cased"
 
 PadLength = 320
 DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
-ConvergenceLimit = 0.0001
+ConvergenceLimit = 0.001
 BackView = 100
-Stoptime = 28800 # 8 hours
+Stoptime = 18000 # 5 hours
 Batch_Size_Train = 8
 Learning_Rate = 5e-5
 Custom_Loss = 0.1
