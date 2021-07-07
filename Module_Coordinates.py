@@ -1,4 +1,3 @@
-
 import re
 def find_coordinates(Par):
     Sixers = []
@@ -155,4 +154,120 @@ def removal(potcord):
     potcord = remove_additional_spaces(potcord)
     return potcord
 
+def split_string(Par):
+    ParSpl = Par.split(" ")
+    Splitted = []
+    for item in ParSpl:
+        Number = False
+        for char in item:
+            if char.isdigit():
+                Number = True
+        if Number:
+            for char in list(item):
+                Splitted.append(char)
+        else:
+            Splitted.append(item)
+    Returnpar = " "
+    for word in Splitted:
+        Returnpar = Returnpar + word + " "
+    return Returnpar[:-1]
 
+import torch
+def get_label(Str, Model, Tokenizer):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    StrEnc = Tokenizer(Str, return_tensors='pt').to(device)
+    Output = Model(**StrEnc)
+    Softmaxed = Output.logits.softmax(-1)
+    Labels = []
+    for labels in Softmaxed[0]:
+        lblcur = []
+        for lbl in labels:
+            lblcur.append(lbl.item())
+        Labels.append(lblcur)
+    return Labels[1:-1] # CLS + SEP
+
+
+def get_token_class(Tokens, Labels):
+    Classes = []
+    for i in range(len(Tokens)):
+        MaxClass = max(Labels[i])
+        CurClasses = []
+        for j in range(len(Labels[i])):
+            if Labels[i][j] == MaxClass:
+                CurClasses.append(j)
+        Classes.append(CurClasses)
+    return Classes
+
+def extract_relevant_classes(Tokens, Classes):
+    Relevant = []
+    for i in range(len(Tokens)):
+        for Element in Classes[i]:
+            PotClasses = []
+            if Element in [1, 2, 3, 4, 5]:
+                PotClasses.append(Element)
+        Relevant.append((Tokens[i], PotClasses))
+    return Relevant
+
+
+def Extend(List):
+    RList = []
+    for item in List:
+        for item2 in List:
+            RList.append(str(item) + str(item2))
+    RList = List + RList
+    return RList
+
+def ToCoords(RevTokens):
+    rnum = 0
+    Grad = []
+    Min = []
+    Sek = []
+    Lat = []
+    Long = []
+    for (Token, ClassList) in RevTokens:
+        if "#" not in Token:
+            for Class in ClassList:
+                if Class == 1:
+                    Grad.append(Token)
+                if Class == 2:
+                    Min.append(Token)
+                if Class == 3:
+                    Sek.append(Token)
+                if Class == 4:
+                    Lat.append(Token)
+                if Class == 5:
+                    Long.append(Token)
+    GradE = Extend(Grad)
+    MinE = Extend(Min)
+    SekE = Extend(Sek)
+    LatE = Extend(Lat)
+    LongE = Extend(Long)
+    DirE = Extend(LatE+LongE)
+    if len(SekE)>0:
+        rnum = 8
+    else:
+        rnum = 6
+    return(GradE, MinE, SekE, DirE, rnum)
+
+def labels_to_int():
+    LabelDict = {}
+    LabelDict["[CLS]"] = -100
+    LabelDict["[SEP]"] = -100
+    LabelDict["Nul"] = 0
+    LabelDict["Noise"] = 6
+    LabelDict["Grad"] = 1
+    LabelDict["Min"] = 2
+    LabelDict["Sek"] = 3
+    LabelDict["Latitude"] = 4
+    LabelDict["Longitude"] = 5
+    LabelDict["Padded"] = -100
+    IntToLabel = {}
+    IntToLabel[0] = "Nul"
+    IntToLabel[1] = "Grad"
+    IntToLabel[2] = "Min"
+    IntToLabel[3] = "Sek"
+    IntToLabel[4] = "Latitude"
+    IntToLabel[5] = "Longitude"
+    IntToLabel[6] = "Noise"
+    IntToLabel[-100] = ["[SEP]","[CLS]", "Padded"]
+    return LabelDict, IntToLabel

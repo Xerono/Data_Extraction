@@ -120,7 +120,7 @@ for modeltype in modelsorig:
 
 
     Datasets = []
-    #Datasets.append((Dataset, "Real"))
+    Datasets.append((Dataset, "Real"))
 
     
     FakeDataFile = open(CurDir + "/Files/FakeData_t_" + modeltype + ".pickle", "rb")

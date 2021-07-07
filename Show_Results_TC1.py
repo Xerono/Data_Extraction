@@ -1,6 +1,6 @@
 import os
 
-RealData = False
+RealData = True
 OnlyShowFoundTokens = True
 
 
@@ -260,20 +260,21 @@ if RealData:
                 for lbl in Label:
                     wrds.append(Token + "   |   " + IntToLabel[lbl])
                     Found = True
-            if OnlyShowFoundTokens:
-                if Found:
+            if len(PotCords)==0:
+                if OnlyShowFoundTokens:
+                    if Found:
+                        print(SplitPar)
+                        print(PotCords)
+                        for wrd in wrds:
+                            print(wrd)
+                        input()
+                else:
                     print(SplitPar)
                     print(PotCords)
-                    for wrd in wrds:
-                        print(wrd)
-                    input()
-            else:
-                print(SplitPar)
-                print(PotCords)
-                if Found:
-                    for wrd in wrds:
-                        print(wrd)
-                    input()
+                    if Found:
+                        for wrd in wrds:
+                            print(wrd)
+                        input()
 else:
     if not fdfile:
         print("Real models don't have fake data")
