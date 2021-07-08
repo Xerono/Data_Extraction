@@ -77,19 +77,19 @@ for mdl in All_Models:
 
 for mdl in Models:
     Paras = mdl.split("_")[1]
-    if Paras[0]:
+    if int(Paras[0]):
         Cut_Par = True
     else:
         Cut_Par = False
-    if Paras[1]:
+    if int(Paras[1]):
         CTN = True
     else:
         CTN = False
-    if Paras[2]:
+    if int(Paras[2]):
         Dele = True
     else:
         Dele = False
-    if Paras[3]:
+    if int(Paras[3]):
         CLoss = True
     else:
         CLoss = False
@@ -213,7 +213,7 @@ for mdl in Models:
                 print(SplitPar)
                 input()
             if Runner%10000==0:
-                print(str(Runner) + "/" + str(len(Dataset)))
+                print(Paras + " - " + str(Runner) + "/" + str(len(Dataset)))
             Runner+=1
                 
 
