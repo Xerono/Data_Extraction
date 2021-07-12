@@ -507,7 +507,7 @@ for Cut_Par in Options:
                 Model.save_pretrained(CurDir + "/Models/" + ModName)
                 
                 import pickle
-                HistoryOutputPlace = CurDir + "/Results/" + mdl + "_Loss_History.pickle"
+                HistoryOutputPlace = CurDir + "/Results/" + mdl + "_Loss_History_" + str(FullTime) + ".pickle"
                 with open(HistoryOutputPlace, "wb") as file:
                     pickle.dump(loss_history, file)
 
