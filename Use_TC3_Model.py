@@ -93,10 +93,17 @@ for mdl in Models:
         CLoss = True
     else:
         CLoss = False
+    if int(Paras[4]):
+        DLabels = True
+    else:
+        DLabels = False
     Model_Path = ModPath + mdl
 
     from transformers import BertForTokenClassification
-    model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
+    if DLabels:
+        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=11).to(device)
+    else:
+        model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
     model.eval()
 
 
@@ -221,7 +228,7 @@ for mdl in Models:
             
     results_list = []
 
-    results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss),
+    results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss), int(DLabels),
                          Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0],
                          Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N],
                          HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8],
@@ -242,6 +249,7 @@ for mdl in Models:
                 CTN INTEGER NOT NULL,
                 Dele INTEGER NOT NULL,
                 CLoss INTEGER NOT NULL,
+                DetLabels INTEGER NOT NULL,
                 B1T1 INTEGER NOT NULL,
                 B1T0 INTEGER NOT NULL,
                 B0T1 INTEGER NOT NULL,
@@ -267,7 +275,7 @@ for mdl in Models:
         Cur.execute(sql_command)
         Con.commit()
         
-    sql_command = "INSERT INTO TC3 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    sql_command = "INSERT INTO TC3 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     Cur.executemany(sql_command, results_list)
     Con.commit()
     Con.close()
