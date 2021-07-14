@@ -4,7 +4,7 @@ Basemodel = "bert-base-cased"
 
 PadLength = 320
 DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
-ConvergenceLimit = 0.001
+ConvergenceLimit = 0.0001
 BackView = 100
 Stoptime = 28800 # 8 hours
 Batch_Size_Train = 8
@@ -515,6 +515,7 @@ for Cut_Par in Options:
                             labels = batch['labels'].to(device)
                             outputs = Model(input_ids, attention_mask=attention_mask, labels=labels)
                             loss = outputs[0]
+                            CLossForBatch = 0
                             if Custom_LossO:
                                 Softmaxed = outputs.logits.softmax(-1)
                                 for SingleParLabels in Softmaxed:
@@ -545,7 +546,8 @@ for Cut_Par in Options:
                                             if WhichCoords.index(4) > WhichCoords.index(5):
                                                 Add_Loss += Custom_Loss
                                     loss += Add_Loss
-                                    CLoss_History.append(Add_Loss)
+                                    CLossForBatch += Add_Loss
+                            CLoss_History.append(LossForBatch)
                             loss.backward()
                             optim.step()
                             lossnum = loss.item()

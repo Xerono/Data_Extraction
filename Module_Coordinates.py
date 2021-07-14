@@ -198,12 +198,12 @@ def get_token_class(Tokens, Labels):
         Classes.append(CurClasses)
     return Classes
 
-def extract_relevant_classes(Tokens, Classes):
+def extract_relevant_classes(Tokens, Classes, ClassList):
     Relevant = []
     for i in range(len(Tokens)):
         for Element in Classes[i]:
             PotClasses = []
-            if Element in [1, 2, 3, 4, 5]:
+            if Element in ClassList:
                 PotClasses.append(Element)
         Relevant.append((Tokens[i], PotClasses))
     return Relevant
@@ -223,6 +223,9 @@ def ToCoords(RevTokens):
     Min = []
     Sek = []
     Lat = []
+    Grad2 = []
+    Min2 = []
+    Sek2 = []
     Long = []
     for (Token, ClassList) in RevTokens:
         if "#" not in Token:
@@ -237,17 +240,26 @@ def ToCoords(RevTokens):
                     Lat.append(Token)
                 if Class == 5:
                     Long.append(Token)
+                if Class == 7:
+                    Grad2.append(Token)
+                if Class == 8:
+                    Min2.append(Token)
+                if Class == 9:
+                    Sek2.append(Token)
     GradE = Extend(Grad)
     MinE = Extend(Min)
     SekE = Extend(Sek)
     LatE = Extend(Lat)
+    Grad2E = Extend(Grad2)
+    Min2E = Extend(Min2)
+    Sek2E = Extend(Sek2)
     LongE = Extend(Long)
     DirE = Extend(LatE+LongE)
-    if len(SekE)>0:
+    if len(SekE + Sek2E)>0:
         rnum = 8
     else:
         rnum = 6
-    return(GradE, MinE, SekE, DirE, rnum)
+    return(GradE, MinE, SekE, DirE, Grad2E, Min2E, Sek2E, rnum)
 
 def labels_to_int():
     LabelDict = {}

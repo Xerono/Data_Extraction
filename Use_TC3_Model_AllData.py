@@ -71,35 +71,23 @@ ModPath = CurDir + "/Models/"
 All_Models = os.listdir(ModPath)
 
 Models = []
+from transformers import BertForTokenClassification
 for mdl in All_Models:
     if "TC3" in mdl:
         Models.append(mdl)
 
 for mdl in Models:
     Paras = mdl.split("_")[1]
-    if int(Paras[0]):
-        Cut_Par = True
-    else:
-        Cut_Par = False
-    if int(Paras[1]):
-        CTN = True
-    else:
-        CTN = False
-    if int(Paras[2]):
-        Dele = True
-    else:
-        Dele = False
-    if int(Paras[3]):
-        CLoss = True
-    else:
-        CLoss = False
-    if int(Paras[4]):
-        DLabels = True
-    else:
-        DLabels = False
+
+    Cut_Par = bool(int(Paras[0]))
+    CTN = bool(int(Paras[1]))
+    Dele = bool(int(Paras[2]))
+    CLoss = bool(int(Paras[3]))
+    DLabels = bool(int(Paras[4]))
+
     Model_Path = ModPath + mdl
 
-    from transformers import BertForTokenClassification
+    
     if DLabels:
         model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=11).to(device)
     else:
@@ -134,7 +122,10 @@ for mdl in Models:
             Tokens = Tokenizer.tokenize(SplitPar)
             Labels = mc.get_label(SplitPar, model, Tokenizer)
             Classes = mc.get_token_class(Tokens, Labels)
-            RevTokens = mc.extract_relevant_classes(Tokens, Classes)
+            if DLabels:
+                RevTokens = mc.extract_relevant_classes(Tokens, Classes, [1,2,3,4,5,7,8,9])
+            else:
+                RevTokens = mc.extract_relevant_classes(Tokens, Classes, [1,2,3,4,5])
 
             FoundRele = False
             for (Token, Labellist) in RevTokens:
@@ -152,49 +143,95 @@ for mdl in Models:
                 else:
                     Resultsdict[o1] += 1
 
-                (GradE, MinE, SekE, DirE, rnum) = mc.ToCoords(RevTokens)
+                (GradE, MinE, SekE, DirE, Grad2E, Min2E, Sek2E, rnum) = mc.ToCoords(RevTokens)
                 ReturnCoords = []
                 for i in range(LenCoords):
                     ReturnCoords.append(False)
-                if LenCoords == 8:
-                    for grad in GradE:
-                        if (not ReturnCoords[0]) and grad == PotCords[0]:
-                            ReturnCoords[0] = grad
-                        if (not ReturnCoords[4]) and grad == PotCords[4]:
-                            ReturnCoords[4] = grad
-                    for mint in MinE:
-                        if (not ReturnCoords[1]) and mint == PotCords[1]:
-                            ReturnCoords[1] = mint
-                        if (not ReturnCoords[5]) and mint == PotCords[5]:
-                            ReturnCoords[5] = mint
-                    for sek in SekE:
-                        if (not ReturnCoords[2]) and sek == PotCords[2]:
-                            ReturnCoords[2] = sek
-                        if (not ReturnCoords[6]) and sek == PotCords[6]:
-                            ReturnCoords[6] = sek
-                    for dire in DirE:
-                        diru = dire.upper()
-                        if (not ReturnCoords[3]) and diru == PotCords[3]:
-                            ReturnCoords[3] = diru
-                        if (not ReturnCoords[7]) and diru == PotCords[7]:
-                            ReturnCoords[7] = diru
+                if not DLabels:
+                    if LenCoords == 8:
+                        for grad in GradE:
+                            if (not ReturnCoords[0]) and grad == PotCords[0]:
+                                ReturnCoords[0] = grad
+                            if (not ReturnCoords[4]) and grad == PotCords[4]:
+                                ReturnCoords[4] = grad
+                        for mint in MinE:
+                            if (not ReturnCoords[1]) and mint == PotCords[1]:
+                                ReturnCoords[1] = mint
+                            if (not ReturnCoords[5]) and mint == PotCords[5]:
+                                ReturnCoords[5] = mint
+                        for sek in SekE:
+                            if (not ReturnCoords[2]) and sek == PotCords[2]:
+                                ReturnCoords[2] = sek
+                            if (not ReturnCoords[6]) and sek == PotCords[6]:
+                                ReturnCoords[6] = sek
+                        for dire in DirE:
+                            diru = dire.upper()
+                            if (not ReturnCoords[3]) and diru == PotCords[3]:
+                                ReturnCoords[3] = diru
+                            if (not ReturnCoords[7]) and diru == PotCords[7]:
+                                ReturnCoords[7] = diru
+                    else:
+                        for grad in GradE:
+                            if (not ReturnCoords[0]) and grad == PotCords[0]:
+                                ReturnCoords[0] = grad
+                            if (not ReturnCoords[3]) and grad == PotCords[3]:
+                                ReturnCoords[3] = grad
+                        for mint in MinE:
+                            if (not ReturnCoords[1]) and mint == PotCords[1]:
+                                ReturnCoords[1] = mint
+                            if (not ReturnCoords[4]) and mint == PotCords[4]:
+                                ReturnCoords[4] = mint
+                        for dire in DirE:
+                            diru = dire.upper()
+                            if (not ReturnCoords[2]) and diru == PotCords[2]:
+                                ReturnCoords[2] = diru
+                            if (not ReturnCoords[5]) and diru == PotCords[5]:
+                                ReturnCoords[5] = diru
                 else:
-                    for grad in GradE:
-                        if (not ReturnCoords[0]) and grad == PotCords[0]:
-                            ReturnCoords[0] = grad
-                        if (not ReturnCoords[3]) and grad == PotCords[3]:
-                            ReturnCoords[3] = grad
-                    for mint in MinE:
-                        if (not ReturnCoords[1]) and mint == PotCords[1]:
-                            ReturnCoords[1] = mint
-                        if (not ReturnCoords[4]) and mint == PotCords[4]:
-                            ReturnCoords[4] = mint
-                    for dire in DirE:
-                        diru = dire.upper()
-                        if (not ReturnCoords[2]) and diru == PotCords[2]:
-                            ReturnCoords[2] = diru
-                        if (not ReturnCoords[5]) and diru == PotCords[5]:
-                            ReturnCoords[5] = diru
+                    if LenCoords == 8:
+                        for grad in GradE:
+                            if (not ReturnCoords[0]) and grad == PotCords[0]:
+                                ReturnCoords[0] = grad
+                        for grad in Grad2E:
+                            if (not ReturnCoords[4]) and grad == PotCords[4]:
+                                ReturnCoords[4] = grad
+                        for mint in MinE:
+                            if (not ReturnCoords[1]) and mint == PotCords[1]:
+                                ReturnCoords[1] = mint
+                        for mint in Min2E:
+                            if (not ReturnCoords[5]) and mint == PotCords[5]:
+                                ReturnCoords[5] = mint
+                        for sek in SekE:
+                            if (not ReturnCoords[2]) and sek == PotCords[2]:
+                                ReturnCoords[2] = sek
+                        for sek in Sek2E:
+                            if (not ReturnCoords[6]) and sek == PotCords[6]:
+                                ReturnCoords[6] = sek
+                        for dire in DirE:
+                            diru = dire.upper()
+                            if (not ReturnCoords[3]) and diru == PotCords[3]:
+                                ReturnCoords[3] = diru
+                            if (not ReturnCoords[7]) and diru == PotCords[7]:
+                                ReturnCoords[7] = diru
+                    else:
+                        for grad in GradE:
+                            if (not ReturnCoords[0]) and grad == PotCords[0]:
+                                ReturnCoords[0] = grad
+                        for grad in Grad2E:
+                            if (not ReturnCoords[3]) and grad == PotCords[3]:
+                                ReturnCoords[3] = grad
+                        for mint in MinE:
+                            if (not ReturnCoords[1]) and mint == PotCords[1]:
+                                ReturnCoords[1] = mint
+                        for mint in Min2E:
+                            if (not ReturnCoords[4]) and mint == PotCords[4]:
+                                ReturnCoords[4] = mint
+                        for dire in DirE:
+                            diru = dire.upper()
+                            if (not ReturnCoords[2]) and diru == PotCords[2]:
+                                ReturnCoords[2] = diru
+                            if (not ReturnCoords[5]) and diru == PotCords[5]:
+                                ReturnCoords[5] = diru
                 Hits = 0
                 Found = True
                 for i in range(len(ReturnCoords)):
