@@ -547,7 +547,7 @@ for Cut_Par in Options:
                                                 Add_Loss += Custom_Loss
                                     loss += Add_Loss
                                     CLossForBatch += Add_Loss
-                            CLoss_History.append(LossForBatch)
+                            CLoss_History.append(CLossForBatch)
                             loss.backward()
                             optim.step()
                             lossnum = loss.item()
