@@ -307,7 +307,7 @@ for mdl in Models:
                 Sixers INTEGER NOT NULL,
                 Eighters INTEGER NOT NULL,
                 Empty INTEGER NOT NULL,
-                PRIMARY KEY(CutPar, CTN, Dele, CLoss)
+                PRIMARY KEY(CutPar, CTN, Dele, CLoss, DetLabels)
                 );"""
         Cur.execute(sql_command)
         Con.commit()

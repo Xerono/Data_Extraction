@@ -328,7 +328,7 @@ for mdl in Models:
                     Precision FLOAT NOT NULL,
                     Recall REAL NOT NULL,
                     FVal REAL NOT NULL,
-                    PRIMARY KEY(CutPar, CTN, Dele, CLoss)
+                    PRIMARY KEY(CutPar, CTN, Dele, CLoss, DetLabels)
                     );"""
             Cur.execute(sql_command)
             Con.commit()
