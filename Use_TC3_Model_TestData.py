@@ -82,7 +82,6 @@ for mdl in Models:
         Dele = bool(int(Paras[2]))
         CLoss = bool(int(Paras[3]))
         DLabels = bool(int(Paras[4]))
-
         Model_Path = ModPath + mdl
         
         if DLabels:
@@ -328,7 +327,7 @@ for mdl in Models:
                     Precision FLOAT NOT NULL,
                     Recall REAL NOT NULL,
                     FVal REAL NOT NULL,
-                    PRIMARY KEY(CutPar, CTN, Dele, CLoss, DetLabels)
+                    PRIMARY KEY(CutPar, CTN, Dele, CLoss, DetLabels, TestData)
                     );"""
             Cur.execute(sql_command)
             Con.commit()
