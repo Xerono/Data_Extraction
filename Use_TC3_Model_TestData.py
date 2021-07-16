@@ -274,10 +274,10 @@ for mdl in Models:
                              Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0],
                              Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N],
                              HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8],
-                             Numbers[0], Numbers[1], Numbers[2]),
+                             Numbers[0], Numbers[1], Numbers[2],
                              LabelDict[1], LabelDict[2], LabelDict[3], LabelDict[4], LabelDict[5], LabelDict[6], LabelDict[7], LabelDict[8], LabelDict[9],
                              prec, rec, (2*prec*rec)/(prec+rec) 
-                            )
+                            ))
 
 
         Database = CurDir + "/Results/Results.db"
