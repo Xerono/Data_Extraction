@@ -26,7 +26,7 @@ for i in range(4):
 
 
 ThisBatch = Batches[This_Batch]
-Func = "Create_TC3_Model.py"
+Func = os.getcwd() + "/Create_TC3_Model.py"
 
 for Paras in ThisBatch:
     NewTarget = ""

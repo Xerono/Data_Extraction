@@ -10,7 +10,7 @@ print(sys.argv)
 
 
 Basemodel = "distilbert-base-uncased"
-#Basemodel = "bert-base-cased"
+Basemodel = "bert-base-cased"
 
 
 PadLength = 320
