@@ -8,14 +8,6 @@ CurDir = os.getcwd()
 
 
 import sqlite3
-Database = CurDir + "/Files/Database.db"
-Con = sqlite3.connect(Database)
-Cur = Con.cursor()
-xs = "Select * FROM Pars"
-OriginalPars = Cur.execute(xs).fetchall()
-Con.close()
-
-
 
 Maxlength = 917
 

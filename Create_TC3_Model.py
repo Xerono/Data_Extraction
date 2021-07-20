@@ -1,11 +1,20 @@
+import sys
+
+Cut_Par = bool(int(sys.argv[1]))
+Coord_To_Noise = bool(int(sys.argv[2]))
+Delete_Teilcoords = bool(int(sys.argv[3]))
+Custom_LossO = bool(int(sys.argv[4]))
+Detailed_Labels = bool(int(sys.argv[5]))
+
+print(sys.argv)
+
+
 Basemodel = "distilbert-base-uncased"
-Basemodel = "bert-base-cased"
+#Basemodel = "bert-base-cased"
 
 
 PadLength = 320
 DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
-ConvergenceLimit = 0.0001
-BackView = 100
 Stoptime = 28800 # 8 hours
 Batch_Size_Train = 8
 Learning_Rate = 5e-5
@@ -15,15 +24,13 @@ TestPercentage = 10
 
 import random
 import time
-Randomseed = time.time()
+Randomseed = "DasIstEinSeed"
 
 Parameters = {}
 Parameters["Basemodel"] = Basemodel
 Parameters["Randomseed"] = Randomseed
 Parameters["PadLength"] = PadLength
 Parameters["DatasetLength"] = DatasetLength
-Parameters["ConvergenceLimit"] = ConvergenceLimit
-Parameters["BackView"] = BackView
 Parameters["Stoptime"] = Stoptime
 Parameters["Batch_Size_Train"] = Batch_Size_Train
 Parameters["Learning_Rate"] = Learning_Rate
@@ -478,116 +485,109 @@ from torch.utils.data import DataLoader
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 import time
-Options = [False, True]
-for Cut_Par in Options:
-    for Coord_To_Noise in Options:
-        for Delete_Teilcoords in Options:
-            for Custom_LossO in Options:
-                for Detailed_Labels in Options:
-                    random.seed(Randomseed)
-                    if Detailed_Labels:
-                        Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=11) # Grad1, Min1, Sek1, Lat, Grad2, Min2, Sek2, Long, Noise, Irrelevant, Pad
-                    else:
-                        Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=8) # Grad, Min, Sek, Lat, Long, Noise, Irrelevant, Pad
-                    Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
-                    optim = AdamW(Model.parameters(), lr=Learning_Rate)
-                    Training_Loader = DataLoader(TrainData, batch_size = Batch_Size_Train)
-                    Model.to(device)
-                    loss_history = []
-                    convergence = []
-                    ConvergenceFound = False
-                    Storage = False
-                    starttime = time.time()
-                    Counter = 0
-                    CLoss_History = []
-                    Code = str(int(Cut_Par)) + str(int(Coord_To_Noise)) + str(int(Delete_Teilcoords)) + str(int(Custom_LossO)) + str(int(Detailed_Labels))
-                    if Detailed_Labels:
-                        Interesting_Labels = [1, 2, 3, 4, 5, 7, 8]
-                        Missing_Labels = [1, 2, 4, 5, 7, 8]
-                    else:
-                        Interesting_Labels = [1, 2, 3, 4, 5]
-                        Missing_Labels = [1,2,4,5]
-                    while not ConvergenceFound and time.time() - starttime < Stoptime :
-                        for batch in Training_Loader:
-                            optim.zero_grad()
-                            input_ids = batch['input_ids'].to(device)
-                            attention_mask = batch['attention_mask'].to(device)
-                            labels = batch['labels'].to(device)
-                            outputs = Model(input_ids, attention_mask=attention_mask, labels=labels)
-                            loss = outputs[0]
-                            CLossForBatch = 0
-                            if Custom_LossO:
-                                Softmaxed = outputs.logits.softmax(-1)
-                                for SingleParLabels in Softmaxed:
-                                    LabelsForPar = []
-                                    for ScoresForOneToken in SingleParLabels:
-                                        TknMax = 0
-                                        for i in range(len(ScoresForOneToken)):
-                                            if ScoresForOneToken[i].item() > TknMax:
-                                                TknMax = ScoresForOneToken[i].item()
-                                        TknLabels = []
-                                        for i in range(len(ScoresForOneToken)):
-                                            if ScoresForOneToken[i].item() == TknMax:
-                                                TknLabels.append(i)
-                                        LabelsForPar.append(TknLabels)
-                                    WhichCoords = []
-                                    for lblistpertoken in LabelsForPar:
-                                        lbl = random.choice(lblistpertoken)
-                                        if lbl in Interesting_Labels:
-                                            WhichCoords.append(lbl)
-                                    Add_Loss = 0
-                                    if WhichCoords:
-                                        # Something is missing (3s are optional)
-                                        for Target in Missing_Labels:
-                                            if Target not in WhichCoords:
-                                                Add_Loss += Custom_Loss
-                                        # First Long before Lat
-                                        if 4 in WhichCoords and 5 in WhichCoords:
-                                            if WhichCoords.index(4) > WhichCoords.index(5):
-                                                Add_Loss += Custom_Loss
-                                    loss += Add_Loss
-                                    CLossForBatch += Add_Loss
-                                CLoss_History.append(CLossForBatch)
-                            loss.backward()
-                            optim.step()
-                            lossnum = loss.item()
-                            loss_history.append(lossnum)
-                            convergence.append(lossnum)
-                            if len(convergence) == BackView + 1:
-                                avg = 0
-                                for i in range(BackView):
-                                    avg += convergence[i]
-                                LastLoss = avg/BackView
-                                Diff = LastLoss - convergence[BackView]
-                                if abs(Diff) < ConvergenceLimit:
-                                    ConvergenceFound = True
-                                convergence = convergence[1:]
-                            
-                            if Counter % 1000 == 0:
-                                print(Code + " with loss of " + str(lossnum))
-                            Counter += 1
-                               
-                    endtime = time.time()
-                    FullTime = endtime - starttime
-                    
-                    mdl = "TC3_" + Code
-                    ModName =  mdl + "_Model/"
-                    Model.save_pretrained(CurDir + "/Models/" + ModName)
-                    
-                    
-                    HistoryOutputPlace = CurDir + "/Results/TC3_Loss/" + Code + ".pickle"
-                    with open(HistoryOutputPlace, "wb") as file:
-                        pickle.dump(loss_history, file)
-                    if Custom_LossO:
-                        CHOP = CurDir + "/Results/TC3_Custom_Loss/" + Code + ".pickle"
-                        with open(CHOP, "wb") as file:
-                            pickle.dump(CLoss_History, file)
 
-                    Parameters["FullTime"] = FullTime
-                    Parameters["Len_los_history"] = len(loss_history)
-                        
-                    with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
-                        pickle.dump(Parameters, file)
-                    print("Model " + mdl + " saved.")
-                        
-print("Finished.")
+random.seed(Randomseed)
+if Detailed_Labels:
+    Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=11) # Grad1, Min1, Sek1, Lat, Grad2, Min2, Sek2, Long, Noise, Irrelevant, Pad
+else:
+    Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=8) # Grad, Min, Sek, Lat, Long, Noise, Irrelevant, Pad
+Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
+optim = AdamW(Model.parameters(), lr=Learning_Rate)
+Training_Loader = DataLoader(TrainData, batch_size = Batch_Size_Train)
+Model.to(device)
+loss_history = []
+convergence = []
+ConvergenceFound = False
+Storage = False
+starttime = time.time()
+Counter = 0
+CLoss_History = []
+Code = str(int(Cut_Par)) + str(int(Coord_To_Noise)) + str(int(Delete_Teilcoords)) + str(int(Custom_LossO)) + str(int(Detailed_Labels))
+if Detailed_Labels:
+    Interesting_Labels = [1, 2, 3, 4, 5, 7, 8]
+    Missing_Labels = [1, 2, 4, 5, 7, 8]
+else:
+    Interesting_Labels = [1, 2, 3, 4, 5]
+    Missing_Labels = [1,2,4,5]
+while time.time() - starttime < Stoptime :
+    for batch in Training_Loader:
+        optim.zero_grad()
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        labels = batch['labels'].to(device)
+        outputs = Model(input_ids, attention_mask=attention_mask, labels=labels)
+        loss = outputs[0]
+        CLossForBatch = 0
+        if Custom_LossO:
+            i = 0
+            Softmaxed = outputs.logits.softmax(-1)
+            for SingleParLabels in Softmaxed:
+                ParagraphHasCoordinates  = False
+                for label in labels[i]:
+                    if label.item() in Interesting_Labels:
+                        ParagraphHasCoordinates = True
+                i+=1
+                LabelsForPar = []
+                for ScoresForOneToken in SingleParLabels:
+                    TknMax = 0
+                    for i in range(len(ScoresForOneToken)):
+                        if ScoresForOneToken[i].item() > TknMax:
+                            TknMax = ScoresForOneToken[i].item()
+                    TknLabels = []
+                    for i in range(len(ScoresForOneToken)):
+                        if ScoresForOneToken[i].item() == TknMax:
+                            TknLabels.append(i)
+                    LabelsForPar.append(TknLabels)
+                WhichCoords = []
+                for lblistpertoken in LabelsForPar:
+                    lbl = random.choice(lblistpertoken)
+                    if lbl in Interesting_Labels:
+                        WhichCoords.append(lbl)
+                Add_Loss = 0
+                if ParagraphHasCoordinates:
+                    # Something is missing (3s are optional)
+                    for Target in Missing_Labels:
+                        if Target not in WhichCoords:
+                            Add_Loss += Custom_Loss
+                    # First Long before Lat
+                    if 4 in WhichCoords and 5 in WhichCoords:
+                        if WhichCoords.index(4) > WhichCoords.index(5):
+                            Add_Loss += Custom_Loss
+                else:
+                    # Coordinates found in paragraph without coordinates
+                    for item in WhichCoords:
+                        Add_Loss += Custom_Loss
+                loss += Add_Loss
+                CLossForBatch += Add_Loss
+            CLoss_History.append(CLossForBatch)
+        loss.backward()
+        optim.step()
+        lossnum = loss.item()
+        loss_history.append(lossnum)       
+        if Counter % 1000 == 0:
+            print(Code + " with loss of " + str(lossnum))
+        Counter += 1
+           
+endtime = time.time()
+FullTime = endtime - starttime
+
+mdl = "TC3_" + Code
+ModName =  mdl + "_Model/"
+Model.save_pretrained(CurDir + "/Models/" + ModName)
+
+
+HistoryOutputPlace = CurDir + "/Results/TC3_Loss/" + Code + ".pickle"
+with open(HistoryOutputPlace, "wb") as file:
+    pickle.dump(loss_history, file)
+if Custom_LossO:
+    CHOP = CurDir + "/Results/TC3_Custom_Loss/" + Code + ".pickle"
+    with open(CHOP, "wb") as file:
+        pickle.dump(CLoss_History, file)
+
+Parameters["FullTime"] = FullTime
+Parameters["Len_los_history"] = len(loss_history)
+    
+with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
+    pickle.dump(Parameters, file)
+print("Model " + mdl + " saved.")
+

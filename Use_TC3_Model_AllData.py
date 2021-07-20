@@ -94,8 +94,9 @@ for mdl in Models:
         model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=8).to(device)
     model.eval()
 
-
-
+    LabelDict = {}
+    for i in range(1,10):
+        LabelDict[i] = 0
     Resultsdict = {}
     o1 = "NullEins"
     o0 = "NullNull"
@@ -126,7 +127,10 @@ for mdl in Models:
                 RevTokens = mc.extract_relevant_classes(Tokens, Classes, [1,2,3,4,5,7,8,9])
             else:
                 RevTokens = mc.extract_relevant_classes(Tokens, Classes, [1,2,3,4,5])
-
+            for ClassesPerToken in Classes:
+                for Label in ClassesPerToken:
+                    if Label in LabelDict.keys():
+                        LabelDict[Label] += 1
             FoundRele = False
             for (Token, Labellist) in RevTokens:
                 for lbl in Labellist:
@@ -263,13 +267,26 @@ for mdl in Models:
 
 
             
-    results_list = []
-
-    results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss), int(DLabels),
-                         Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0],
-                         Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N],
-                         HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8],
-                         Numbers[0], Numbers[1], Numbers[2]))
+        if (Resultsdict[11] + Resultsdict[10]) == 0:
+            prec = 0
+        else:
+            prec = Resultsdict[11]/(Resultsdict[11] + Resultsdict[10])
+        if (Resultsdict[11] + Resultsdict[o1]) == 0:
+            rec = 0
+        else:
+            rec = Resultsdict[11]/(Resultsdict[11] + Resultsdict[o1])
+        if prec + rec == 0:
+            fval = 0
+        else:
+            fval = (2*prec*rec)/(prec+rec) 
+        results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss), int(DLabels), int(IsThisTestData),
+                             Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0],
+                             Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N],
+                             HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8],
+                             Numbers[0], Numbers[1], Numbers[2],
+                             LabelDict[1], LabelDict[2], LabelDict[3], LabelDict[4], LabelDict[5], LabelDict[6], LabelDict[7], LabelDict[8], LabelDict[9],
+                             prec, rec, fval
+                            ))
 
 
     Database = CurDir + "/Results/Results.db"
@@ -307,12 +324,24 @@ for mdl in Models:
                 Sixers INTEGER NOT NULL,
                 Eighters INTEGER NOT NULL,
                 Empty INTEGER NOT NULL,
+                LabelNum1 INTEGER NOT NULL,
+                LabelNum2 INTEGER NOT NULL,
+                LabelNum3 INTEGER NOT NULL,
+                LabelNum4 INTEGER NOT NULL,
+                LabelNum5 INTEGER NOT NULL,
+                LabelNum6 INTEGER NOT NULL,
+                LabelNum7 INTEGER NOT NULL,
+                LabelNum8 INTEGER NOT NULL,
+                LabelNum9 INTEGER NOT NULL,
+                Precision FLOAT NOT NULL,
+                Recall REAL NOT NULL,
+                FVal REAL NOT NULL,
                 PRIMARY KEY(CutPar, CTN, Dele, CLoss, DetLabels)
                 );"""
         Cur.execute(sql_command)
         Con.commit()
         
-    sql_command = "INSERT INTO TC3 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    sql_command = "INSERT INTO TC3 VALUES (?, ?,?,?,?,?,?,?,?,?,?,?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     Cur.executemany(sql_command, results_list)
     Con.commit()
     Con.close()
