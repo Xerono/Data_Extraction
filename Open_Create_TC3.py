@@ -24,13 +24,11 @@ for i in range(4):
     for end in Ends:
         Batches[i].append(Fronts[i] + end)
 
-
+import Create_TC3_Model as NewTC3Model
 ThisBatch = Batches[This_Batch]
 Func = os.getcwd() + "/Create_TC3_Model.py"
-
+import subprocess
 for Paras in ThisBatch:
-    NewTarget = ""
-    for letter in Paras:
-        NewTarget += " " + letter
-    os.system(Func + NewTarget)
+    NewTC3Model.create(tuple(Paras))
+
 print("Finished")
