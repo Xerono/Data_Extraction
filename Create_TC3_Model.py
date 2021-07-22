@@ -327,12 +327,14 @@ def create(Inputs):
     def Replace(ParCord):
         (Par, ListOfCoords, Detailed_Labels) = ParCord
         FullNewCoords = []
+        NewCoords = []
         for (Coord, String) in ListOfCoords:
             if random.choice([6, 8]) == 6:
                 (CoordsString, PotCords, Labels) = generate_six_coords(Detailed_Labels)
             else:
                 (CoordsString, PotCords, Labels) = generate_eight_coords(Detailed_Labels)
             Par = Par.replace(String, CoordsString)
+            NewCoords.append(CoordsString)
             FullNewCoords.append((CoordsString, PotCords, Labels))
         FullLabels = []
         SplitPar = mc.split_string(Par)
@@ -345,7 +347,7 @@ def create(Inputs):
                 if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
                     for j in range(len(Labellist)):
                         FullLabels[i+j] = Labellist[j]
-        return (SplitPar, FullLabels)
+        return (SplitPar, FullLabels, NewCoords)
 
 
 
@@ -390,40 +392,32 @@ def create(Inputs):
                 Current_Par = Current_Par.replace(PrePar, Pre)
                 Current_Par = Current_Par.replace(PostPar, Post)
 
-            (SP, Labels) = Replace((Current_Par, CordList, Detailed_Labels))
+            (SP, Labels, NewCoords) = Replace((Current_Par, CordList, Detailed_Labels))
 
             
             if Coord_To_Noise:
                 if not Storage:
                     if random.choice([1,2,3,4]) == 1:
-                        NewCoords = []
                         NoiseList = []
                         NoisePar = Current_Par
-                        for stringcoord in SCoords:
+                        for stringcoord in NewCoords:
                             coord_list = list(stringcoord)
                             random.shuffle(coord_list)
                             NewCords = ""
                             for item in coord_list:
                                 NewCords = NewCords + item
                             NoisePar = NoisePar.replace(stringcoord, NewCords)
-                            NoiseList.append(Tokenizer.tokenize(mc.split_string(NewCords)))
                         NoisePar = Current_Par
                            
                         NoisePar = mc.split_string(NoisePar)
                         TNP = Tokenizer.tokenize(NoisePar)
                         FullLabels = []
                         for i in range(len(TNP)):
-                            FullLabels.append(0)
-                        for Noisel in NoiseList:
-                            for i in range(len(TNP)):
-                                if i+len(Noisel) < len(TNP) and TNP[i:i+len(Noisel)] == Noisel:
-                                    for j in range(len(Noisel)):
-                                        FullLabels[i+j] = LabelDict["Nul"]
-                        Storage = (NoisePar, FullLabels)
+                            FullLabels.append(LabelDict["Nul"])
+                        Storage = (NoisePar, FullLabels, NewCoords)
 
-                        
                 else:
-                    (SP, Labels) = Storage
+                    (SP, Labels, NewCoords) = Storage
                     Storage = False
             
 

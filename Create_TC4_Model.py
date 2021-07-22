@@ -1,3 +1,5 @@
+Storage = False
+
 def create(Inputs):
     (Cutting_Pars, CoordsToNoise, Delete_Coords, Detailed_Labels) = Inputs
     Cut_Par = bool(int(Cutting_Pars))
@@ -5,6 +7,10 @@ def create(Inputs):
     Delete_Teilcoords = bool(int(Delete_Coords))
     Detailed_Labels = bool(int(Detailed_Labels))
 
+    if Detailed_Labels:
+        num_labels = 12
+    else:
+        num_labels = 9
     
     Basemodel = "bert-base-cased"
     Basemodel = "distilbert-base-uncased"
@@ -83,7 +89,8 @@ def create(Inputs):
 
     from transformers import BertTokenizerFast
     from transformers import BertForTokenClassification
-
+    from transformers import AdamW
+    from torch.utils.data import DataLoader
 
     Symbols = ["•", "H", "V", "¢", ".", "j", "J", "°", ",", ";", "Њ", "Ј", "U",
                    '"', "″", "'", "o", "@", "؇", "-", "¶", "(", ")", "Љ", "±",
@@ -104,6 +111,13 @@ def create(Inputs):
     int_to_label[10] = "Min2"
     int_to_label[11] = "Sek2"
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
+    Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
+    optim = AdamW(Model.parameters(), lr=Learning_Rate)
+
+
+    
     def Labelvector_To_Label(Labels):
         Max = -1
         for i in range(len(Labels)):
@@ -258,12 +272,131 @@ def create(Inputs):
     
         
     def Replace(ParCord):
+        Basic_Label = []
+        if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+            for i in range(12):
+                Basic_Label.append(0)
+        else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+            for i in range(9):
+                Basic_Label.append(0)
+        Basic_Label[1] = 1
         (Par, ListOfCoords) = ParCord
         FullNewCoords = []
         for (Coord, String) in ListOfCoords:
             (PotCoords, CoordsString, Labels) = generate_coords()
             Par = Par.replace(String, CoordsString)
             FullNewCoords.append((PotCoords, CoordsString, Labels))
+        Coords_In_This_Par = []
+        FullLabels = []
+        SplitPar = mc.split_string(Par)
+        TokenizedSplitPar = Tokenizer.tokenize(SplitPar)
+        for i in range(len(TokenizedSplitPar)):
+            FullLabels.append(Basic_Label.copy())
+        for (PotCoords, CoordsString, Labels) in FullNewCoords:
+            CoordsSplit = Tokenizer.tokenize(mc.split_string(CoordsString))
+            for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
+                if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
+                    for j in range(len(Labels)):
+                        FullLabels[i+j] = Labels[j]
+            Coords_In_This_Par.append((PotCoords, CoordsString))
+        return(SplitPar, FullLabels, Coords_In_This_Par)
+
+    class Dataset(torch.utils.data.Dataset):
+        def __getitem__(self, idx):
+            global Storage
+            random.shuffle(PwC)
+            (Current_Par, CordList) = PwC[0]
+            ECoords = []
+            SCoords = []
+            for (ECord, SCord) in CordList:
+                ECoords.append(ECord)
+                SCoords.append(SCord)
+            if Cut_Par:
+                #Paragraph before first coordinates
+                FirstCoords = SCoords[0]
+                PrePar = Current_Par.split(FirstCoords)[0]
+                FirstSplit = PrePar.split(" ")
+                NewPre = []
+                for Word in FirstSplit:
+                    if random.choice([1,2,3,4]) != 1:
+                        NewPre.append(Word)
+                Pre = ""
+                for Word in NewPre:
+                    Pre = Pre + Word + " "
+                #Paragraph after last coordinates
+                LastCoords = SCoords[-1]
+                PostPar = Current_Par.split(LastCoords)[-1]
+                LastSplit = PostPar.split(" ")
+                NewPost = []
+                for Word in LastSplit:
+                    if random.choice([1,2,3,4]) != 1:
+                        NewPost.append(Word)
+                Post = ""
+                for Word in NewPost:
+                    Post = Post + Word + " "
+                Current_Par = Current_Par.replace(PrePar, Pre)
+                Current_Par = Current_Par.replace(PostPar, Post)
+
+            (SP, Labels, CoordsInPar) = Replace((Current_Par, CordList))
+
+            
+            if Coord_To_Noise:
+                if not Storage:
+                    if random.choice([1,2,3,4]) == 1:
+                        
+
+                        
+                else:
+                    (SP, Labels) = Storage
+                    Storage = False
             
 
+            TSP = Tokenizer(SP)
+            Attentionmask = []
+            for i in range(len(Labels)):
+                if Labels[i] == 0:
+                    if random.choice([1,2,3]) == 1:
+                        Attentionmask.append(0)
+                    else:
+                        Attentionmask.append(1)
+                else:
+                    Attentionmask.append(1)
+            
+            TSPcoded = TSP['input_ids'][1:-1]# CLS / SEP
 
+            if Delete_Teilcoords:
+                Slices_With_Coords = []
+                for i in range(1, len(Labels)-1):
+                    if Labels[i] in Interesting_Labels:
+                        Slices_With_Coords.append(i)
+                if Slices_With_Coords and random.choice([1,2,3,4]) == 1:
+                    NumberToDelete = random.randint(1, int(len(Slices_With_Coords)))
+                    Deleted = []
+                    for i in range(NumberToDelete):
+                        ToDelete = random.choice(Slices_With_Coords)
+                        while ToDelete in Deleted:
+                            ToDelete = random.choice(Slices_With_Coords)
+                        Deleted.append(ToDelete)
+                    for i in Deleted:
+                        if i in range(len(TSPcoded)):
+                            del TSPcoded[i]
+                            del Labels[i]
+                            del Attentionmask[i]
+                    for i in range(len(Labels)):
+                        if Labels[i] != LabelDict["Nul"]:
+                            Labels[i] = LabelDict["Nul"]
+            
+            for i in range(PadLength-len(Labels)):
+                TSPcoded.append(0)
+                Labels.append(-100)
+                Attentionmask.append(0)
+
+            item = {}
+            item['input_ids'] =  torch.tensor(TSPcoded)
+            item['labels'] = torch.tensor(Labels)
+            item['attention_mask'] = torch.tensor(Attentionmask)
+            return item
+
+        def __len__(self):
+            return DatasetLength
+    
