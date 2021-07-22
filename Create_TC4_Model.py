@@ -6,7 +6,10 @@ def create(Inputs):
     Coord_To_Noise = bool(int(CoordsToNoise))
     Delete_Teilcoords = bool(int(Delete_Coords))
     Detailed_Labels = bool(int(Detailed_Labels))
-
+    Code = ""
+    for var in Inputs:
+        Code += str(var)
+    
     if Detailed_Labels:
         num_labels = 12
     else:
@@ -16,8 +19,9 @@ def create(Inputs):
     Basemodel = "distilbert-base-uncased"
 
     PadLength = 320
-    DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
+    DatasetLength = 10#000 # Datasetlength / Batch size = Iterations per Epoch
     Stoptime = 28800 # 8 hours
+    Stoptime = 10
     Batch_Size_Train = 8
     Learning_Rate = 5e-5
     Custom_Loss = 0.1
@@ -162,17 +166,16 @@ def create(Inputs):
         
         if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
             for i in range(12):
-                Basic_Label.append(0)
+                Basic_Label.append(float(0))
         else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
             for i in range(9):
-                Basic_Label.append(0)
-                
+                Basic_Label.append(float(0))                
 
         Grad1 = str(random.randint(0, 90))
         for i in range(len(Grad1)):
             Cur = Basic_Label.copy()
-            Cur[3] = 1
-            Cur[4] = 1
+            Cur[3] = float(0)
+            Cur[4] = float(0)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Grad1 + Noise
@@ -182,8 +185,8 @@ def create(Inputs):
         Min1 = str(random.randint(0, 60))
         for i in range(len(Min1)):
             Cur = Basic_Label.copy()
-            Cur[3] = 1
-            Cur[5] = 1
+            Cur[3] = float(0)
+            Cur[5] = float(0)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Min1 + Noise
@@ -194,8 +197,8 @@ def create(Inputs):
             Sek1 = str(random.randint(0, 60))
             for i in range(len(Sek1)):
                 Cur = Basic_Label.copy()
-                Cur[3] = 1
-                Cur[6] = 1
+                Cur[3] = float(0)
+                Cur[6] = float(0)
                 Labels.append(Cur)
             (Noise, NLabels) = generate_noise()
             CoordsString = CoordsString + Sek1 + Noise
@@ -204,8 +207,8 @@ def create(Inputs):
 
         Lat = random.choice(["N", "S"])
         Cur = Basic_Label.copy()
-        Cur[3] = 1
-        Cur[7] = 1
+        Cur[3] = float(0)
+        Cur[7] = float(0)
         Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Lat + Noise
@@ -215,11 +218,11 @@ def create(Inputs):
         Grad2 = str(random.randint(0, 90))
         for i in range(len(Grad2)):
             Cur = Basic_Label.copy()
-            Cur[3] = 1
+            Cur[3] = float(0)
             if Detailed_Labels:
-                Cur[9] = 1
+                Cur[9] = float(0)
             else:
-                Cur[4] = 1
+                Cur[4] = float(0)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Grad2 + Noise
@@ -229,11 +232,11 @@ def create(Inputs):
         Min2 = str(random.randint(0, 60))
         for i in range(len(Min2)):
             Cur = Basic_Label.copy()
-            Cur[3] = 1
+            Cur[3] = float(0)
             if Detailed_Labels:
-                Cur[10] = 1
+                Cur[10] = float(0)
             else:
-                Cur[5] = 1
+                Cur[5] = float(0)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Min2 + Noise
@@ -244,11 +247,11 @@ def create(Inputs):
             Sek2 = str(random.randint(0, 60))
             for i in range(len(Sek2)):
                 Cur = Basic_Label.copy()
-                Cur[3] = 1
+                Cur[3] = float(0)
                 if Detailed_Labels:
-                    Cur[11] = 1
+                    Cur[11] = float(0)
                 else:
-                    Cur[6] = 1
+                    Cur[6] = float(0)
                 Labels.append(Cur)
             (Noise, NLabels) = generate_noise()
             CoordsString = CoordsString + Sek2 + Noise
@@ -257,8 +260,8 @@ def create(Inputs):
 
         Lon = random.choice(["W", "E"])
         Cur = Basic_Label.copy()
-        Cur[3] = 1
-        Cur[8] = 1
+        Cur[3] = float(0)
+        Cur[8] = float(0)
         Labels.append(Cur)
         CoordsString = CoordsString + Lon
 
@@ -275,11 +278,11 @@ def create(Inputs):
         Basic_Label = []
         if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
             for i in range(12):
-                Basic_Label.append(0)
+                Basic_Label.append(float(0))
         else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
             for i in range(9):
-                Basic_Label.append(0)
-        Basic_Label[1] = 1
+                Basic_Label.append(float(0))
+        Basic_Label[1] = float(0)
         (Par, ListOfCoords) = ParCord
         FullNewCoords = []
         for (Coord, String) in ListOfCoords:
@@ -304,6 +307,18 @@ def create(Inputs):
     class Dataset(torch.utils.data.Dataset):
         def __getitem__(self, idx):
             global Storage
+            Irrel_Label = []
+            Padded_Label = []
+            if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+                for i in range(12):
+                    Irrel_Label.append(float(0))
+                    Padded_Label.append(float(0))
+            else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+                for i in range(9):
+                    Irrel_Label.append(float(0))
+                    Padded_Label.append(float(0))
+            Irrel_Label[1] = float(0)
+            Padded_Label[0] = float(0)
             random.shuffle(PwC)
             (Current_Par, CordList) = PwC[0]
             ECoords = []
@@ -343,60 +358,97 @@ def create(Inputs):
             if Coord_To_Noise:
                 if not Storage:
                     if random.choice([1,2,3,4]) == 1:
-                        
-
-                        
+                        NoiseLabels = []
+                        NoisePar = SP
+                        for (Coords, StringC) in CoordsInPar:
+                            newc = list(StringC)
+                            random.shuffle(newc)
+                            newcs = ""
+                            for teilstring in newc:
+                                newcs += teilstring
+                            NoisePar = NoisePar.replace(mc.split_string(StringC), mc.split_string(newcs))
+                        NoisePar = mc.split_string(NoisePar)
+                        TokenizedNP = Tokenizer.tokenize(NoisePar)
+                        for i in range(len(TokenizedNP)):
+                            NoiseLabels.append(Irrel_Label.copy())
+                        Storage = (NoisePar, NoiseLabels)
                 else:
                     (SP, Labels) = Storage
                     Storage = False
             
 
             TSP = Tokenizer(SP)
-            Attentionmask = []
-            for i in range(len(Labels)):
-                if Labels[i] == 0:
-                    if random.choice([1,2,3]) == 1:
-                        Attentionmask.append(0)
-                    else:
-                        Attentionmask.append(1)
-                else:
-                    Attentionmask.append(1)
             
             TSPcoded = TSP['input_ids'][1:-1]# CLS / SEP
 
             if Delete_Teilcoords:
-                Slices_With_Coords = []
-                for i in range(1, len(Labels)-1):
-                    if Labels[i] in Interesting_Labels:
-                        Slices_With_Coords.append(i)
-                if Slices_With_Coords and random.choice([1,2,3,4]) == 1:
-                    NumberToDelete = random.randint(1, int(len(Slices_With_Coords)))
-                    Deleted = []
-                    for i in range(NumberToDelete):
-                        ToDelete = random.choice(Slices_With_Coords)
-                        while ToDelete in Deleted:
-                            ToDelete = random.choice(Slices_With_Coords)
-                        Deleted.append(ToDelete)
-                    for i in Deleted:
-                        if i in range(len(TSPcoded)):
+                if random.choice([1,2,3,4]) == 1:
+                    Slices_With_Coords = []
+                    for i in range(1, len(Labels)-1):
+                        if Labels[i][3] == 1:
+                            Slices_With_Coords.append(i)
+                    if Slices_With_Coords:
+                        To_Delete = [] # Deleting on lists while traversing the list is bothersome
+                        for i in Slices_With_Coords:
+                            if random.choice([1,2,3,4]) == 1:
+                                To_Delete.append(i)
+                        for i in To_Delete:
                             del TSPcoded[i]
-                            del Labels[i]
-                            del Attentionmask[i]
-                    for i in range(len(Labels)):
-                        if Labels[i] != LabelDict["Nul"]:
-                            Labels[i] = LabelDict["Nul"]
+                        if To_Delete:
+                            Labels = []
+                            for i in range(len(TSPcoded)):
+                                Labels.append(Irrel_Label.copy())
             
             for i in range(PadLength-len(Labels)):
                 TSPcoded.append(0)
-                Labels.append(-100)
-                Attentionmask.append(0)
-
+                Labels.append(Padded_Label.copy())
+ 
             item = {}
             item['input_ids'] =  torch.tensor(TSPcoded)
             item['labels'] = torch.tensor(Labels)
-            item['attention_mask'] = torch.tensor(Attentionmask)
             return item
 
         def __len__(self):
             return DatasetLength
     
+    import time
+    TrainData = Dataset()
+    Training_Loader = DataLoader(TrainData, batch_size = Batch_Size_Train)
+    BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = torch.ones([num_labels])).to(device)
+    Loss_History = []
+    Counter = 0
+    Starttime = time.time()
+    while time.time() - Starttime < Stoptime:
+        for batch in Training_Loader:
+            optim.zero_grad()
+            input_ids = batch['input_ids'].to(device)
+            labels = batch['labels'].to(device)
+            Output = Model(input_ids)
+            Logits = Output.logits
+            Loss = BCEWLL(Logits, labels)
+            lossnum = Loss.item()
+            Loss_History.append(lossnum)
+            Loss.backward()
+            optim.step()
+            if Counter % 1000 == 0:
+                print(Code + " with loss of " + str(round(lossnum, 6)) + "(" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
+            Counter += 1
+    endtime = time.time()
+    FullTime = endtime - Starttime
+    mdl = "TC4_" + Code
+    ModName = mdl + "_Model/"
+    Model.save_pretrained(CurDir + "/Models/" + ModName)
+
+    import pickle
+    HistoryOutputPlace = CurDir + "/Results/TC4_Loss/" 
+    if not os.path.isdir(HistoryOutputPlace):
+        os.mkdir(HistoryOutputPlace)
+    with open(HistoryOutputPlace + Code + ".pickle", "wb") as file:
+        pickle.dump(Loss_History, file)
+
+    Parameters["FullTime"] = FullTime
+    Parameters["Len_los_history"] = len(Loss_History)
+        
+    with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
+        pickle.dump(Parameters, file)
+    print("Model " + mdl + " saved.")

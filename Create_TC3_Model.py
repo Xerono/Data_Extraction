@@ -562,7 +562,7 @@ def create(Inputs):
             lossnum = loss.item()
             loss_history.append(lossnum)       
             if Counter % 1000 == 0:
-                print(Code + " with loss of " + str(lossnum))
+                print(Code + " with loss of " + str(lossnum) + "(" + str(Counter) + " Steps)")
             Counter += 1
                
     endtime = time.time()
