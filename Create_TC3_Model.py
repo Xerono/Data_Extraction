@@ -334,18 +334,18 @@ def create(Inputs):
                 (CoordsString, PotCords, Labels) = generate_eight_coords(Detailed_Labels)
             Par = Par.replace(String, CoordsString)
             FullNewCoords.append((CoordsString, PotCords, Labels))
-            FullLabels = []
-            SplitPar = mc.split_string(Par)
-            TokenizedSplitPar = Tokenizer.tokenize(SplitPar)
-            for i in range(len(TokenizedSplitPar)):
-                FullLabels.append(0)
-            for (CoordsString, PotCords, Labellist) in FullNewCoords:
-                CoordsSplit = Tokenizer.tokenize(mc.split_string(CoordsString))
-                for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
-                    if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
-                        for j in range(len(Labellist)):
-                            FullLabels[i+j] = Labellist[j]
-            return (SplitPar, FullLabels)
+        FullLabels = []
+        SplitPar = mc.split_string(Par)
+        TokenizedSplitPar = Tokenizer.tokenize(SplitPar)
+        for i in range(len(TokenizedSplitPar)):
+            FullLabels.append(0)
+        for (CoordsString, PotCords, Labellist) in FullNewCoords:
+            CoordsSplit = Tokenizer.tokenize(mc.split_string(CoordsString))
+            for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
+                if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
+                    for j in range(len(Labellist)):
+                        FullLabels[i+j] = Labellist[j]
+        return (SplitPar, FullLabels)
 
 
 
@@ -522,14 +522,14 @@ def create(Inputs):
             loss = outputs[0]
             CLossForBatch = 0
             if Custom_LossO:
-                i = 0
+                Index = 0
                 Softmaxed = outputs.logits.softmax(-1)
                 for SingleParLabels in Softmaxed:
                     ParagraphHasCoordinates  = False
-                    for label in labels[i]:
+                    for label in labels[Index]:
                         if label.item() in Interesting_Labels:
                             ParagraphHasCoordinates = True
-                    i+=1
+                    Index+=1
                     LabelsForPar = []
                     for ScoresForOneToken in SingleParLabels:
                         TknMax = 0
