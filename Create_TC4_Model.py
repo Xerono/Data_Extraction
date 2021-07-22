@@ -16,12 +16,11 @@ def create(Inputs):
         num_labels = 9
     
     Basemodel = "bert-base-cased"
-    Basemodel = "distilbert-base-uncased"
+    #Basemodel = "distilbert-base-uncased"
 
     PadLength = 320
-    DatasetLength = 10#000 # Datasetlength / Batch size = Iterations per Epoch
+    DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
     Stoptime = 28800 # 8 hours
-    Stoptime = 10
     Batch_Size_Train = 8
     Learning_Rate = 5e-5
     Custom_Loss = 0.1
