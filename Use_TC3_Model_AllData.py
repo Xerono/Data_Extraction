@@ -280,7 +280,7 @@ for mdl in Models:
         else:
             fval = (2*prec*rec)/(prec+rec)
         results_list = []
-        results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss), int(DLabels), int(IsThisTestData),
+        results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss), int(DLabels),
                              Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0],
                              Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N],
                              HitDict[0], HitDict[1], HitDict[2], HitDict[3], HitDict[4], HitDict[5], HitDict[6], HitDict[7], HitDict[8],
