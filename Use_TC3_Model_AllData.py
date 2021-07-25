@@ -278,7 +278,8 @@ for mdl in Models:
         if prec + rec == 0:
             fval = 0
         else:
-            fval = (2*prec*rec)/(prec+rec) 
+            fval = (2*prec*rec)/(prec+rec)
+        results_list = []
         results_list.append((int(Cut_Par), int(CTN), int(Dele), int(CLoss), int(DLabels), int(IsThisTestData),
                              Resultsdict[11], Resultsdict[10], Resultsdict[o1], Resultsdict[o0],
                              Resultsdict[B1F], Resultsdict[B1N], Resultsdict[B0F], Resultsdict[B0N],
