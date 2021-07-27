@@ -367,7 +367,6 @@ def create(Inputs):
                 ECoords.append(ECord)
                 SCoords.append(SCord)
             if Cut_Par:
-                print(Current_Par)
                 #Paragraph before first coordinates
                 FirstCoords = SCoords[0]
                 PrePar = Current_Par.split(FirstCoords)[0]
@@ -388,8 +387,7 @@ def create(Inputs):
                     Post = Post + Word + " "
                 Current_Par = Current_Par.replace(PrePar, Pre)
                 Current_Par = Current_Par.replace(PostPar, Post)
-                print(Current_Par)
-                input()
+
 
             (SP, Labels, NewCoords) = Replace((Current_Par, CordList, Detailed_Labels))
 
