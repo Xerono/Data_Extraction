@@ -281,9 +281,9 @@ for mdl in Models:
                             ))
 
 
-        Database = CurDir + "/Results/Results.db"
+        ResDatabase = CurDir + "/Results/Results.db"
 
-        Con = sqlite3.connect(Database)
+        Con = sqlite3.connect(ResDatabase)
         Cur = Con.cursor()
 
         sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TC3_Test'"

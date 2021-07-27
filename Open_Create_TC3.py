@@ -1,4 +1,8 @@
-This_Batch = 0
+import sys
+if len(sys.argv)==2:
+    This_Batch = int(sys.argv[1])
+else:
+    This_Batch = 0
 
 
 import os
@@ -30,4 +34,4 @@ import subprocess
 for Paras in ThisBatch:
     NewTC3Model.create(tuple(Paras))
 
-print("Finished")
+print("Finished batch " + str(This_Batch))

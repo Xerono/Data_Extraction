@@ -367,14 +367,13 @@ def create(Inputs):
                 ECoords.append(ECord)
                 SCoords.append(SCord)
             if Cut_Par:
+                print(Current_Par)
                 #Paragraph before first coordinates
                 FirstCoords = SCoords[0]
                 PrePar = Current_Par.split(FirstCoords)[0]
                 FirstSplit = PrePar.split(" ")
-                NewPre = []
-                for Word in FirstSplit:
-                    if random.choice([1,2,3,4]) != 1:
-                        NewPre.append(Word)
+                Cutnum = random.randint(0, len(FirstSplit))
+                NewPre = FirstSplit[Cutnum:]
                 Pre = ""
                 for Word in NewPre:
                     Pre = Pre + Word + " "
@@ -382,15 +381,15 @@ def create(Inputs):
                 LastCoords = SCoords[-1]
                 PostPar = Current_Par.split(LastCoords)[-1]
                 LastSplit = PostPar.split(" ")
-                NewPost = []
-                for Word in LastSplit:
-                    if random.choice([1,2,3,4]) != 1:
-                        NewPost.append(Word)
+                Cutnum = random.randint(0, len(LastSplit))
+                NewPost = LastSplit[:Cutnum]
                 Post = ""
                 for Word in NewPost:
                     Post = Post + Word + " "
                 Current_Par = Current_Par.replace(PrePar, Pre)
                 Current_Par = Current_Par.replace(PostPar, Post)
+                print(Current_Par)
+                input()
 
             (SP, Labels, NewCoords) = Replace((Current_Par, CordList, Detailed_Labels))
 
@@ -501,10 +500,10 @@ def create(Inputs):
     CLoss_History = []
     Code = str(int(Cut_Par)) + str(int(Coord_To_Noise)) + str(int(Delete_Teilcoords)) + str(int(Custom_LossO)) + str(int(Detailed_Labels))
     if Detailed_Labels:
-        Interesting_Labels = [1, 2, 3, 4, 5, 7, 8]
+        Interesting_Labels = [1, 2, 3, 4, 5, 7, 8] # Grad1, Min1, Sek1, Lat, Long, Grad2, Min2
         Missing_Labels = [1, 2, 4, 5, 7, 8]
     else:
-        Interesting_Labels = [1, 2, 3, 4, 5]
+        Interesting_Labels = [1, 2, 3, 4, 5] # Grad, Min, Sek, Lat, Long
         Missing_Labels = [1,2,4,5]
     while time.time() - starttime < Stoptime :
         for batch in Training_Loader:
@@ -515,15 +514,16 @@ def create(Inputs):
             outputs = Model(input_ids, attention_mask=attention_mask, labels=labels)
             loss = outputs[0]
             CLossForBatch = 0
+            
             if Custom_LossO:
-                Index = 0
+                Current_Par_In_Batch = 0
                 Softmaxed = outputs.logits.softmax(-1)
                 for SingleParLabels in Softmaxed:
                     ParagraphHasCoordinates  = False
-                    for label in labels[Index]:
+                    for label in labels[Current_Par_In_Batch]:
                         if label.item() in Interesting_Labels:
                             ParagraphHasCoordinates = True
-                    Index+=1
+                    
                     LabelsForPar = []
                     for ScoresForOneToken in SingleParLabels:
                         TknMax = 0
@@ -536,11 +536,21 @@ def create(Inputs):
                                 TknLabels.append(i)
                         LabelsForPar.append(TknLabels)
                     WhichCoords = []
+                    All_Calculated_Labels = []
                     for lblistpertoken in LabelsForPar:
                         lbl = random.choice(lblistpertoken)
+                        All_Calculated_Labels.append(lbl)
                         if lbl in Interesting_Labels:
                             WhichCoords.append(lbl)
+                            
                     Add_Loss = 0
+                    # If there's an interesting label, it has to be correct
+                    for i in range(len(All_Calculated_Labels)):
+                        Actual_Label = labels[Current_Par_In_Batch][i].item()
+                        Calculated_Label = All_Calculated_Labels[i]
+                        if Actual_Label in Interesting_Labels:
+                            if Actual_Label != Calculated_Label:
+                                Add_Loss += Custom_Loss * 2 # Important, so doubled
                     if ParagraphHasCoordinates:
                         # Something is missing (3s are optional)
                         for Target in Missing_Labels:
@@ -556,13 +566,14 @@ def create(Inputs):
                             Add_Loss += Custom_Loss
                     loss += Add_Loss
                     CLossForBatch += Add_Loss
+                    Current_Par_In_Batch += 1
                 CLoss_History.append(CLossForBatch)
             loss.backward()
             optim.step()
             lossnum = loss.item()
             loss_history.append(lossnum)       
             if Counter % 1000 == 0:
-                print(Code + " with loss of " + str(lossnum) + "(" + str(Counter) + " Steps)")
+                print(Code + " with loss of " + str(round(lossnum, 6)) + "(" + str(Counter) + " steps, " + str(round(time.time() - starttime, 2)) + "/" + str(Stoptime) + " seconds)")
             Counter += 1
                
     endtime = time.time()
@@ -573,12 +584,16 @@ def create(Inputs):
     Model.save_pretrained(CurDir + "/Models/" + ModName)
 
 
-    HistoryOutputPlace = CurDir + "/Results/TC3_Loss/" + Code + ".pickle"
-    with open(HistoryOutputPlace, "wb") as file:
+    HistoryOutputPlace = CurDir + "/Results/TC3_Loss/"
+    if not os.path.isdir(HistoryOutputPlace):
+        os.mkdir(HistoryOutputPlace)
+    with open(HistoryOutputPlace + Code + ".pickle", "wb") as file:
         pickle.dump(loss_history, file)
     if Custom_LossO:
-        CHOP = CurDir + "/Results/TC3_Custom_Loss/" + Code + ".pickle"
-        with open(CHOP, "wb") as file:
+        CHOP = CurDir + "/Results/TC3_Custom_Loss/"
+        if not os.path.isdir(CHOP):
+            os.mkdir(CHOP)
+        with open(CHOP + Code + ".pickle", "wb") as file:
             pickle.dump(CLoss_History, file)
 
     Parameters["FullTime"] = FullTime
