@@ -173,8 +173,8 @@ def create(Inputs):
         Grad1 = str(random.randint(0, 90))
         for i in range(len(Grad1)):
             Cur = Basic_Label.copy()
-            Cur[3] = float(0)
-            Cur[4] = float(0)
+            Cur[3] = float(1)
+            Cur[4] = float(1)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Grad1 + Noise
@@ -184,8 +184,8 @@ def create(Inputs):
         Min1 = str(random.randint(0, 60))
         for i in range(len(Min1)):
             Cur = Basic_Label.copy()
-            Cur[3] = float(0)
-            Cur[5] = float(0)
+            Cur[3] = float(1)
+            Cur[5] = float(1)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Min1 + Noise
@@ -196,8 +196,8 @@ def create(Inputs):
             Sek1 = str(random.randint(0, 60))
             for i in range(len(Sek1)):
                 Cur = Basic_Label.copy()
-                Cur[3] = float(0)
-                Cur[6] = float(0)
+                Cur[3] = float(1)
+                Cur[6] = float(1)
                 Labels.append(Cur)
             (Noise, NLabels) = generate_noise()
             CoordsString = CoordsString + Sek1 + Noise
@@ -206,8 +206,8 @@ def create(Inputs):
 
         Lat = random.choice(["N", "S"])
         Cur = Basic_Label.copy()
-        Cur[3] = float(0)
-        Cur[7] = float(0)
+        Cur[3] = float(1)
+        Cur[7] = float(1)
         Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Lat + Noise
@@ -217,11 +217,11 @@ def create(Inputs):
         Grad2 = str(random.randint(0, 90))
         for i in range(len(Grad2)):
             Cur = Basic_Label.copy()
-            Cur[3] = float(0)
+            Cur[3] = float(1)
             if Detailed_Labels:
-                Cur[9] = float(0)
+                Cur[9] = float(1)
             else:
-                Cur[4] = float(0)
+                Cur[4] = float(1)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Grad2 + Noise
@@ -231,11 +231,11 @@ def create(Inputs):
         Min2 = str(random.randint(0, 60))
         for i in range(len(Min2)):
             Cur = Basic_Label.copy()
-            Cur[3] = float(0)
+            Cur[3] = float(1)
             if Detailed_Labels:
-                Cur[10] = float(0)
+                Cur[10] = float(1)
             else:
-                Cur[5] = float(0)
+                Cur[5] = float(1)
             Labels.append(Cur)
         (Noise, NLabels) = generate_noise()
         CoordsString = CoordsString + Min2 + Noise
@@ -246,11 +246,11 @@ def create(Inputs):
             Sek2 = str(random.randint(0, 60))
             for i in range(len(Sek2)):
                 Cur = Basic_Label.copy()
-                Cur[3] = float(0)
+                Cur[3] = float(1)
                 if Detailed_Labels:
-                    Cur[11] = float(0)
+                    Cur[11] = float(1)
                 else:
-                    Cur[6] = float(0)
+                    Cur[6] = float(1)
                 Labels.append(Cur)
             (Noise, NLabels) = generate_noise()
             CoordsString = CoordsString + Sek2 + Noise
@@ -259,8 +259,8 @@ def create(Inputs):
 
         Lon = random.choice(["W", "E"])
         Cur = Basic_Label.copy()
-        Cur[3] = float(0)
-        Cur[8] = float(0)
+        Cur[3] = float(1)
+        Cur[8] = float(1)
         Labels.append(Cur)
         CoordsString = CoordsString + Lon
 
