@@ -26,12 +26,11 @@ alls = []
 for i in range(3):
     for end in Ends:
         Batches[i].append(Fronts[i] + end)
-print(Batches)
-input()
+
 import Create_TC4_Model as NewTC4Model
 ThisBatch = Batches[This_Batch]
 import subprocess
 for Paras in ThisBatch:
-    NewTC3Model.create(tuple(Paras))
+    NewTC4Model.create(tuple(Paras))
 
 print("Finished batch " + str(This_Batch))
