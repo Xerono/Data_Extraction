@@ -130,8 +130,9 @@ for mdl in Models:
                     Resultsdict[o1] += 1
 
                 (GradE, MinE, SekE, DirE, Grad2E, Min2E, Sek2E, rnum) = mc.ToCoords(RevTokens)
-                ReturnCoords = []
+                
                 for (PotCords, StringC) in ListOfCoords:
+                    ReturnCoords = []
                     for i in range(len(PotCords)):
                         ReturnCoords.append(False)
                     if not DLabels:
