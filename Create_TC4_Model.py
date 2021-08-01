@@ -316,8 +316,8 @@ def create(Inputs):
                 for i in range(9):
                     Irrel_Label.append(float(0))
                     Padded_Label.append(float(0))
-            Irrel_Label[1] = float(0)
-            Padded_Label[0] = float(0)
+            Irrel_Label[1] = float(1)
+            Padded_Label[0] = float(1)
             random.shuffle(PwC)
             (Current_Par, CordList) = PwC[0]
             ECoords = []
