@@ -430,7 +430,7 @@ def create(Inputs):
             Loss.backward()
             optim.step()
             if Counter % 1000 == 0:
-                print(Code + " with loss of " + str(round(lossnum, 6)) + "(" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
+                print(Code + " with loss of " + str(round(lossnum, 6)) + " (" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
             Counter += 1
     endtime = time.time()
     FullTime = endtime - Starttime

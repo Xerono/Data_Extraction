@@ -21,40 +21,14 @@ Maxlength = 917
 
 import Module_Coordinates as mc
 
-Sixers = []
-Eighters = []
-Errors = []
-NotFound = []
+Dataset = []
 LabelDict, IntLabelDict = mc.labels_to_int()
 for (FPID, File, Par) in OriginalPars:
     (Six, Eight, NE, E) = mc.find_coordinates(Par)
-    for el in Six:
-        Sixers.append(el)
-    for el in Eight:
-        Eighters.append(el)
-    for el in NE:
-        NotFound.append(el)
-    for el in E:
-        Errors.append(el)
-
-
-
-
-Dataset = []
-Numbers = [0,0,0]
-for (Coords, Regex, SplitPar) in Sixers:
-    if len(SplitPar) < Maxlength:
-        Dataset.append((Coords, Regex, 6, mc.split_string(SplitPar)))
-        Numbers[0] += 1
-for (Coords, Regex, SplitPar) in Eighters:
-    if len(SplitPar) < Maxlength:
-        Dataset.append((Coords, Regex, 8, mc.split_string(SplitPar)))
-        Numbers[1] += 1
-for SplitPar in NotFound:
-    if len(SplitPar) < Maxlength:
-        Dataset.append(([], "", 0, mc.split_string(SplitPar)))
-        Numbers[2] += 1
-
+    CordsInThis = []
+    for (Coords, StringC, Par) in Six + Eight:
+        CordsInThis.append((Coords, StringC))
+    Dataset.append((Par, CordsInThis))
 
 import torch
 
@@ -130,5 +104,8 @@ for mdl in Models:
             CorrectParLabels = []
             for i in range(len(TokenizedPar)):
                 CorrectParLabels.append(Basic_Label.copy())
+            for i in range(len(TokenizedPar)-len(TokenizedCooStr)):
+                if TokenizedPar[i:i+len(TokenizedCooStr)] == TokenizedCooStr:
+                    StartOfCoords = i
 
             
