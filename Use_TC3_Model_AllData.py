@@ -132,7 +132,7 @@ for mdl in Models:
                 (GradE, MinE, SekE, DirE, Grad2E, Min2E, Sek2E, rnum) = mc.ToCoords(RevTokens)
                 ReturnCoords = []
                 for (PotCords, StringC) in ListOfCoords:
-                    for i in range(LenCoords):
+                    for i in range(len(PotCords)):
                         ReturnCoords.append(False)
                     if not DLabels:
                         if len(PotCords) == 8:
