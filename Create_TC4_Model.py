@@ -79,9 +79,9 @@ def create(Inputs):
             Trainingdd.append(entry)
 
     import pickle
-    with open(CurDir + "/Files/TC3_Training.pickle", "wb") as file:
+    with open(CurDir + "/Files/TC4_Training.pickle", "wb") as file:
         pickle.dump(Trainingdd, file)
-    with open(CurDir + "/Files/TC3_Test.pickle", "wb") as file:
+    with open(CurDir + "/Files/TC4_Test.pickle", "wb") as file:
         pickle.dump(Testdd, file)
     PwC = Trainingdd
 

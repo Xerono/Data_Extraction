@@ -1,4 +1,8 @@
-This_Batch = 0
+import sys
+if len(sys.argv)==2:
+    This_Batch = int(sys.argv[1])
+else:
+    This_Batch = 0
 
 
 import os
@@ -13,8 +17,7 @@ Batches = [Batch1, Batch2, Batch3]
 Ends = []
 for i in Vars:
     for j in Vars:
-        for k in Vars:
-            Ends.append(i + j + k)
+            Ends.append(i + j)
 Fronts = []
 for i in Vars:
     for j in Vars:
@@ -23,11 +26,12 @@ alls = []
 for i in range(3):
     for end in Ends:
         Batches[i].append(Fronts[i] + end)
-
+print(Batches)
+input()
 import Create_TC4_Model as NewTC4Model
 ThisBatch = Batches[This_Batch]
 import subprocess
 for Paras in ThisBatch:
     NewTC3Model.create(tuple(Paras))
 
-print("Finished")
+print("Finished batch " + str(This_Batch))
