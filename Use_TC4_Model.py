@@ -22,10 +22,15 @@ Maxlength = 917
 import Module_Coordinates as mc
 
 Dataset = []
+Numbers = [0,0,0]
 LabelDict, IntLabelDict = mc.labels_to_int()
 for (FPID, File, Par) in OriginalPars:
     (Six, Eight, NE, E) = mc.find_coordinates(Par)
     CordsInThis = []
+    Numbers[0] = Numbers[0] + len(Six)
+    Numbers[1] = Numbers[1] + len(Eight)
+    if len(Six) + len(Eight) == 0:
+        Numbers[2] = Numbers[2] + 1
     for (Coords, StringC, Par) in Six + Eight:
         CordsInThis.append((Coords, StringC))
     Dataset.append((Par, CordsInThis))
