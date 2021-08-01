@@ -100,6 +100,7 @@ for mdl in Models:
         HitDict[i] = 0
 
     for (Par, ListOfCoords) in Dataset:
+        SplitPar = mc.split_string(Par)
         if len(SplitPar)<Maxlength:
             Tokens = Tokenizer.tokenize(SplitPar)
             Labels = mc.get_label(SplitPar, model, Tokenizer)
