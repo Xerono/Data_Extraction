@@ -1,6 +1,7 @@
 Storage = False
 
 def create(Inputs):
+    print(Inputs)
     (Cutting_Pars, CoordsToNoise, Delete_Coords, Detailed_Labels) = Inputs
     Cut_Par = bool(int(Cutting_Pars))
     Coord_To_Noise = bool(int(CoordsToNoise))
@@ -137,20 +138,18 @@ def create(Inputs):
         return Labels_For_This_Token
 
     def generate_noise():
-        Basic_Label = []
-        if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-            for i in range(12):
-                Basic_Label.append(0)
-        else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
-            for i in range(9):
-                Basic_Label.append(0)
+        Basic_Label = []     
+        for i in range(num_labels):
+            Basic_Label.append(float(0))
+                            # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
 
+                            # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
         Noise = ""
         Labels = []
+        Basic_Label[2] = float(1)
         for i in range(random.choice([1,2])):
             Noise = Noise + random.choice(Symbols)
             CurLabel = Basic_Label.copy()
-            CurLabel[2] = 1
             Labels.append(CurLabel)
             
         return (Noise, Labels)
@@ -163,12 +162,11 @@ def create(Inputs):
         Basic_Label = []
         EightCoords = random.choice([True, False])
         
-        if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-            for i in range(12):
-                Basic_Label.append(float(0))
-        else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
-            for i in range(9):
-                Basic_Label.append(float(0))                
+     # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+        for i in range(num_labels):
+            Basic_Label.append(float(0))
+     # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+            
 
         Grad1 = str(random.randint(0, 90))
         for i in range(len(Grad1)):
@@ -275,13 +273,10 @@ def create(Inputs):
         
     def Replace(ParCord):
         Basic_Label = []
-        if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-            for i in range(12):
-                Basic_Label.append(float(0))
-        else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
-            for i in range(9):
-                Basic_Label.append(float(0))
-        Basic_Label[1] = float(0)
+        for i in range(num_labels):
+            Basic_Label.append(float(0))
+
+        Basic_Label[1] = float(1)
         (Par, ListOfCoords) = ParCord
         FullNewCoords = []
         for (Coord, String) in ListOfCoords:
@@ -308,14 +303,12 @@ def create(Inputs):
             global Storage
             Irrel_Label = []
             Padded_Label = []
-            if Detailed_Labels: # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-                for i in range(12):
-                    Irrel_Label.append(float(0))
-                    Padded_Label.append(float(0))
-            else: # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
-                for i in range(9):
-                    Irrel_Label.append(float(0))
-                    Padded_Label.append(float(0))
+             # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+            for i in range(num_labels):
+                Irrel_Label.append(float(0))
+                Padded_Label.append(float(0))
+ # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+
             Irrel_Label[1] = float(1)
             Padded_Label[0] = float(1)
             random.shuffle(PwC)
@@ -330,10 +323,8 @@ def create(Inputs):
                 FirstCoords = SCoords[0]
                 PrePar = Current_Par.split(FirstCoords)[0]
                 FirstSplit = PrePar.split(" ")
-                NewPre = []
-                for Word in FirstSplit:
-                    if random.choice([1,2,3,4]) != 1:
-                        NewPre.append(Word)
+                Cutnum = random.randint(0, len(FirstSplit))
+                NewPre = FirstSplit[Cutnum:]
                 Pre = ""
                 for Word in NewPre:
                     Pre = Pre + Word + " "
@@ -341,10 +332,8 @@ def create(Inputs):
                 LastCoords = SCoords[-1]
                 PostPar = Current_Par.split(LastCoords)[-1]
                 LastSplit = PostPar.split(" ")
-                NewPost = []
-                for Word in LastSplit:
-                    if random.choice([1,2,3,4]) != 1:
-                        NewPost.append(Word)
+                Cutnum = random.randint(0, len(LastSplit))
+                NewPost = LastSplit[:Cutnum]
                 Post = ""
                 for Word in NewPost:
                     Post = Post + Word + " "
@@ -384,14 +373,14 @@ def create(Inputs):
                 if random.choice([1,2,3,4]) == 1:
                     Slices_With_Coords = []
                     for i in range(1, len(Labels)-1):
-                        if Labels[i][3] == 1:
+                        if Labels[i][3] == float(1):
                             Slices_With_Coords.append(i)
                     if Slices_With_Coords:
                         To_Delete = [] # Deleting on lists while traversing the list is bothersome
                         for i in Slices_With_Coords:
                             if random.choice([1,2,3,4]) == 1:
                                 To_Delete.append(i)
-                        for i in To_Delete:
+                        for i in sorted(To_Delete, reverse=True):
                             del TSPcoded[i]
                         if To_Delete:
                             Labels = []
