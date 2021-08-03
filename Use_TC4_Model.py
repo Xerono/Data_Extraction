@@ -15,7 +15,7 @@ xs = "Select * FROM Pars"
 OriginalPars = Cur.execute(xs).fetchall()
 Con.close()
 
-
+ResDatabase = CurDir + "/Results/Results.db"
 
 Maxlength = 917
 
@@ -70,27 +70,10 @@ for mdl in Models:
     else:
         num_labels = 9
     #model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=num_labels).to(device)
-    model = BertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=9).to(device) # delete later
+    model = BertForTokenClassification.from_pretrained(PreTrainedModel, num_labels=12).to(device) # delete later
     model.eval()
 
-    LabelDict = {}
-    for i in range(1,10):
-        LabelDict[i] = 0
-    Resultsdict = {}
-    o1 = "NullEins"
-    o0 = "NullNull"
-    B1F = "B1SoilFound"
-    B1N = "B1SoilNotF"
-    B0F = "B0SoilFound"
-    B0N = "B0SoilNotF"
-    Resultsdict[11] = 0 # Bewertet 1, Label 1
-    Resultsdict[10] = 0 # Bewertet 1, Label 0
-    Resultsdict[o1] = 0
-    Resultsdict[o0] = 0
-    Resultsdict[B1F] = 0
-    Resultsdict[B1N] = 0
-    Resultsdict[B0F] = 0
-    Resultsdict[B0N] = 0
+
     Zero_Label = []
     for i in range(num_labels):
         Zero_Label.append(float(0))
@@ -102,6 +85,15 @@ for mdl in Models:
     # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
     # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
     # Grad, Min, (Sek), Lat, Grad, Min, (Sek), Long
+    All_Results = {}
+    for i in range(12):
+        All_Results[i] = 0
+    AvgPerToken = []
+    AvgPerPar = []
+    Total_Corrects = 0
+    Coord_Correct = 0
+    Coord_False = 0
+    FalsePositiveCoords = 0
     for (Par, ListOfCoords) in Dataset:
         SplitPar = mc.split_string(Par)
         if len(SplitPar)<Maxlength:
@@ -207,15 +199,78 @@ for mdl in Models:
                 New_Label = []
                 for val in Current_Label:
                     if val.item() > Treshold:
-                        New_Label.append(1)
+                        New_Label.append(float(1))
                     else:
-                        New_Label.append(0)
+                        New_Label.append(float(0))
                 LabelsForPar.append(New_Label)
-
+                
+            Sum_For_Par = 0
             for i in range(len(TokenizedPar)):
-                print(TokenizedPar[i])
-                print(LabelsForPar[i])
-            input()
-                    
+                Sum_For_Token = 0
+                for j in range(num_labels):
+                    if LabelsForPar[i][j] == Full_Labels[i][j]:
+                        Total_Corrects += 1
+                    All_Results[j] += LabelsForPar[j]
+                    Sum_For_Token += LabelsForPar[j]
+                Sum_For_Token = Sum_For_Token/num_labels
+                Sum_For_Par += Sum_For_Token
+                AvgPerToken.append(Sum_For_Token)
 
-            
+                if Full_Labels[i][3] == float(1):
+                    if LabelsForPar[i][3] == float(1):
+                        Coord_Correct += 1
+                    else:
+                        Coord_False += 1
+                else:
+                    if LabelsForPar[i][3] == float(1):
+                        FalsePositiveCoords += 1
+                
+            Sum_For_Par = Sum_For_Par / len(TokenizedPar)
+            AvgPerPar.append(Sum_For_Par)
+    AvgPerPar = sum(AvgPerPar)/len(AvgPerPar)
+    AvgPerToken = sum(AvgPerToken)/len(AvgPerToken)
+
+    results_list = [(int(Cut_Par), int(CTN), int(Dele), int(DLabels), Treshold,
+                     Total_Corrects, Coord_Correct, Coord_False, FalsePositiveCoords, AvgPerPar, AvgPerToken,
+                     All_Results[0], All_Results[1], All_Results[2], All_Results[3], All_Results[4], All_Results[5], 
+                     All_Results[6], All_Results[7], All_Results[8], All_Results[9], All_Results[10], All_Results[11]
+                     )]
+                     
+                    
+    Con = sqlite3.connect(ResDatabase)
+    Cur = Con.cursor()
+    sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TC4'"
+    res = Cur.execute(sql_command).fetchall()
+    if res[0][0] == 0:
+        sql_command = """
+                CREATE TABLE TC4 (
+                CutPar INTEGER NOT NULL,
+                CTN INTEGER NOT NULL,
+                Dele INTEGER NOT NULL,
+                DetLabels INTEGER NOT NULL,
+                Treshold FLOAT NOT NULL,
+                Total_Corrects INTEGER NOT NULL,
+                Coord_Correct INTEGER NOT NULL,
+                Coord_False INTEGER NOT NULL,
+                AvgPerPar FLOAT NOT NULL,
+                AvgPerToken FLOAT NOT NULL,
+                Class0 INTEGER NOT NULL,
+                Class1 INTEGER NOT NULL,
+                Class2 INTEGER NOT NULL,
+                Class3 INTEGER NOT NULL,
+                Class4 INTEGER NOT NULL,
+                Class5 INTEGER NOT NULL,
+                Class6 INTEGER NOT NULL,
+                Class7 INTEGER NOT NULL,
+                Class8 INTEGER NOT NULL,
+                Class9 INTEGER NOT NULL,
+                Class10 INTEGER NOT NULL,
+                Class11 INTEGER NOT NULL,
+                PRIMARY KEY(CutPar, CTN, Dele, DetLabels, Treshold)
+                );"""
+        Cur.execute(sql_command)
+        Con.commit()
+    sql_command = "INSERT INTO TC4 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    Cur.executemany(sql_command, results_list)
+    Con.commit()
+    Con.close()

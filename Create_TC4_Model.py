@@ -422,6 +422,7 @@ def create(Inputs):
                 print(Code + " with loss of " + str(round(lossnum, 6)) + " (" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
             Counter += 1
     endtime = time.time()
+    Storage = False
     FullTime = endtime - Starttime
     mdl = "TC4_" + Code
     ModName = mdl + "_Model/"
