@@ -1,7 +1,7 @@
 import os
 import pickle
 import time
-Tresholds = [float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99)]
+Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99)]
 
 
 CurDir = os.getcwd()
