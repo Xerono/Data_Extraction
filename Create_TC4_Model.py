@@ -415,15 +415,16 @@ def create(Inputs):
             Logits = Output.logits
             Loss = BCEWLL(Logits, labels)
             lossnum = Loss.item()
-            if lossnum > Loss_History[-1]*100:
-                Errordict = {}
-                Errordict["Old_Loss"] = Loss_History[-1]
-                Errordict["New_Loss"] = lossnum
-                Errordict["Paragraph_ids"] = input_ids
-                Errordict["Labels"] = labels
-                Errordict["Paragraph_tokens"] = Tokenizer.convert_ids_to_tokens(input_ids)
-                Errordict["Output"] = Output
-                Strange_Happenings.append(Errordict)
+            if Loss_History:
+                if lossnum > Loss_History[-1]*100:
+                    Errordict = {}
+                    Errordict["Old_Loss"] = Loss_History[-1]
+                    Errordict["New_Loss"] = lossnum
+                    Errordict["Paragraph_ids"] = input_ids
+                    Errordict["Labels"] = labels
+                    Errordict["Paragraph_tokens"] = Tokenizer.convert_ids_to_tokens(input_ids)
+                    Errordict["Output"] = Output
+                    Strange_Happenings.append(Errordict)
             Loss_History.append(lossnum)
             Loss.backward()
             optim.step()
