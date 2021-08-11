@@ -72,7 +72,6 @@ for mdl in Models:
         model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=num_labels).to(device)
 
         model.eval()
-        model.train()
 
         Zero_Label = []
         for i in range(num_labels):

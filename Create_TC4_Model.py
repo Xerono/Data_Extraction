@@ -393,6 +393,7 @@ def create(Inputs):
             item = {}
             item['input_ids'] =  torch.tensor(TSPcoded)
             item['labels'] = torch.tensor(Labels)
+
             return item
 
         def __len__(self):
@@ -405,9 +406,11 @@ def create(Inputs):
     Loss_History = []
     Counter = 0
     Strange_Happenings = []
+    Time_For_Batch = []
     Starttime = time.time()
     while time.time() - Starttime < Stoptime:
         for batch in Training_Loader:
+            sstime = time.time()
             optim.zero_grad()
             input_ids = batch['input_ids'].to(device)
             labels = batch['labels'].to(device)
@@ -417,12 +420,17 @@ def create(Inputs):
             lossnum = Loss.item()
             if Loss_History:
                 if lossnum > Loss_History[-1]*100:
+                    print("Jump in loss detected:")
+                    print(str(Loss_History[-1]) + " to " + str(lossnum) + " in step " + str(Counter))
                     Errordict = {}
+                    Errordict["Step"] = Counter
                     Errordict["Old_Loss"] = Loss_History[-1]
                     Errordict["New_Loss"] = lossnum
                     Errordict["Paragraph_ids"] = input_ids
                     Errordict["Labels"] = labels
-                    Errordict["Paragraph_tokens"] = Tokenizer.convert_ids_to_tokens(input_ids)
+                    Errordict["Paragraph_tokens_and_labels"] = []
+                    for jj in range(Batch_Size_Train):
+                        Errordict["Paragraph_tokens_and_labels"].append((Tokenizer.convert_ids_to_tokens(input_ids[jj]), labels[jj]))
                     Errordict["Output"] = Output
                     Strange_Happenings.append(Errordict)
             Loss_History.append(lossnum)
@@ -431,6 +439,8 @@ def create(Inputs):
             if Counter % 1000 == 0:
                 print(Code + " with loss of " + str(round(lossnum, 6)) + " (" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
             Counter += 1
+            eetime = time.time()
+            Time_For_Batch.append(eetime-sstime)
     endtime = time.time()
     global Storage
     Storage = False
@@ -452,7 +462,7 @@ def create(Inputs):
         pickle.dump(Strange_Happenings, file)
     Parameters["FullTime"] = FullTime
     Parameters["Len_los_history"] = len(Loss_History)
-        
+    Parameters["Time_Per_Batch"] = Time_For_Batch    
     with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
         pickle.dump(Parameters, file)
     print("Model " + mdl + " saved.")
