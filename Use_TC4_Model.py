@@ -72,7 +72,7 @@ for mdl in Models:
         model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=num_labels).to(device)
 
         model.eval()
-
+        model.train()
 
         Zero_Label = []
         for i in range(num_labels):
@@ -97,6 +97,8 @@ for mdl in Models:
         Counter = 0
         RealCoordinate = 0
         Starttime = time.time()
+        Num_Of_All_Tokens = 0
+        Correct_Labels = 0
         for (Par, ListOfCoords) in Dataset:
             if Counter % 10000 == 0:
                 print(mdl + " - "  + str(Treshold) + " - " + str(Counter) + "/" + str(len(Dataset)) + " - " +  str(time.time() - Starttime))
@@ -195,12 +197,16 @@ for mdl in Models:
                             
                 # SplitPar
                 # Full_Labels
+
+                Num_Of_All_Tokens += len(Full_Labels)
                 for i in range(len(Full_Labels)):
                     if Full_Labels[i][3] == float(1):
                         RealCoordinate += 1
                 StrEnc = Tokenizer(SplitPar, return_tensors="pt").to(device)
                 Output = model(**StrEnc)
+
                 Logits = Output.logits[0][1:-1].sigmoid()
+
                 LabelsForPar = []
                 for i in range(len(TokenizedPar)):
                     Current_Token = TokenizedPar[i]
@@ -215,9 +221,11 @@ for mdl in Models:
                 Sum_For_Par = 0
                 for i in range(len(TokenizedPar)):
                     Sum_For_Token = 0
+                    if LabelsForPar[i] == Full_Labels[i]:
+                        Total_Corrects += 1                    
                     for j in range(num_labels):
                         if LabelsForPar[i][j] == Full_Labels[i][j]:
-                            Total_Corrects += 1
+                            Correct_Labels += 1
                         All_Results[j] += LabelsForPar[i][j]
                         Sum_For_Token += LabelsForPar[i][j]
                     Sum_For_Token = Sum_For_Token/num_labels
@@ -235,16 +243,31 @@ for mdl in Models:
                 Sum_For_Par = Sum_For_Par / len(TokenizedPar)
                 AvgPerPar.append(Sum_For_Par)
 
+
         AvgPerPar = sum(AvgPerPar)/len(AvgPerPar)
         AvgPerToken = sum(AvgPerToken)/len(AvgPerToken)
         Endtime = time.time()
         Final_Time = Endtime - Starttime
         print("Finished " + mdl + " with Treshold " + str(Treshold) + " in " + str(Final_Time))
+        KKR = Total_Corrects/Num_Of_All_Tokens
+        if Coord_Correct + FalsePositiveCoords != 0:
+            Precision = Coord_Correct/(Coord_Correct + FalsePositiveCoords)
+        else:
+            Precision = 0
+        if Coord_Correct + Coord_False != 0:
+            Recall = Coord_Correct/(Coord_Correct + Coord_False)
+        else:
+            Recall = 0
+        if Precision + Recall != 0:
+            Fval = (2*Precision * Recall)/(Precision + Recall)
+        else:
+            Fval = 0
         
-        results_list = [(int(Cut_Par), int(CTN), int(Dele), int(DLabels), Treshold, Final_Time, len(Full_Labels),
-                         Total_Corrects, RealCoordinate, Coord_Correct, Coord_False, FalsePositiveCoords, AvgPerPar, AvgPerToken,
+        results_list = [(int(Cut_Par), int(CTN), int(Dele), int(DLabels), Treshold, Final_Time, Num_Of_All_Tokens,
+                         Total_Corrects, Correct_Labels, RealCoordinate, Coord_Correct, Coord_False, FalsePositiveCoords, AvgPerPar, AvgPerToken,
                          All_Results[0], All_Results[1], All_Results[2], All_Results[3], All_Results[4], All_Results[5], 
-                         All_Results[6], All_Results[7], All_Results[8], All_Results[9], All_Results[10], All_Results[11]
+                         All_Results[6], All_Results[7], All_Results[8], All_Results[9], All_Results[10], All_Results[11],
+                         KKR, Precision, Recall, Fval
                          )]
                          
                         
@@ -263,10 +286,11 @@ for mdl in Models:
                     Treshold FLOAT NOT NULL,
                     Time FLOAT NOT NULL,
                     Num_All_Tokens INTEGER NOT NULL,
-                    Total_Corrects INTEGER NOT NULL,
-                    NumOfRealCoordinate INTEGER NOT NULL,
-                    Num_Of_Correct_Coord INTEGER NOT NULL,
-                    Num_Of_False_Coord INTEGER NOT NULL,
+                    Coomplete_Correct_Predicted_Tokens INTEGER NOT NULL,
+                    Correct_Predicted_Single_Classes INTEGER NOT NULL,
+                    Real_Coordinates INTEGER NOT NULL,
+                    Correct_Predicted_Coords INTEGER NOT NULL,
+                    False_Predicted_Coords INTEGER NOT NULL,
                     FalsePositiveCoords INTEGER NOT NULL,
                     AvgPerPar_AfterTresh FLOAT NOT NULL,
                     AvgPerToken_AfterTresh FLOAT NOT NULL,
@@ -282,6 +306,10 @@ for mdl in Models:
                     Class9_Grad2 INTEGER NOT NULL,
                     Class10_Min2 INTEGER NOT NULL,
                     Class11_Sek2 INTEGER NOT NULL,
+                    KorrektKlassifikationsRate FLOAT NOT NULL,
+                    Precision FLOAT NOT NULL,
+                    Recall FLOAT NOT NULL,
+                    Fval FLOAT NOT NULL
                     PRIMARY KEY(CutPar, CTN, Dele, DetLabels, Treshold)
                     );"""
             Cur.execute(sql_command)

@@ -2,7 +2,8 @@ import sys
 if len(sys.argv)==2:
     This_Batch = int(sys.argv[1])
 else:
-    This_Batch = 0
+    print("No batch specified")
+    #sys.exit()
 
 
 import os
@@ -26,6 +27,7 @@ for front in Fronts:
     for end in Ends:
         Batches[i].append(front + end)
     i+=1
+
 import Create_TC4_Model as NewTC4Model
 ThisBatch = Batches[This_Batch]
 import subprocess

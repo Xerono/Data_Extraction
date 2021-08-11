@@ -342,7 +342,6 @@ def create(Inputs):
 
             (SP, Labels, CoordsInPar) = Replace((Current_Par, CordList))
 
-            
             if Coord_To_Noise:
                 if not Storage:
                     if random.choice([1,2,3,4]) == 1:
@@ -366,7 +365,7 @@ def create(Inputs):
             
 
             TSP = Tokenizer(SP)
-            
+
             TSPcoded = TSP['input_ids'][1:-1]# CLS / SEP
 
             if Delete_Teilcoords:
@@ -405,6 +404,7 @@ def create(Inputs):
     BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = torch.ones([num_labels])).to(device)
     Loss_History = []
     Counter = 0
+    Strange_Happenings = []
     Starttime = time.time()
     while time.time() - Starttime < Stoptime:
         for batch in Training_Loader:
@@ -415,6 +415,15 @@ def create(Inputs):
             Logits = Output.logits
             Loss = BCEWLL(Logits, labels)
             lossnum = Loss.item()
+            if lossnum > Loss_History[-1]*100:
+                Errordict = {}
+                Errordict["Old_Loss"] = Loss_History[-1]
+                Errordict["New_Loss"] = lossnum
+                Errordict["Paragraph_ids"] = input_ids
+                Errordict["Labels"] = labels
+                Errordict["Paragraph_tokens"] = Tokenizer.convert_ids_to_tokens(input_ids)
+                Errordict["Output"] = Output
+                Strange_Happenings.append(Errordict)
             Loss_History.append(lossnum)
             Loss.backward()
             optim.step()
@@ -430,12 +439,16 @@ def create(Inputs):
     Model.save_pretrained(CurDir + "/Models/" + ModName)
 
     import pickle
-    HistoryOutputPlace = CurDir + "/Results/TC4_Loss/" 
+    HistoryOutputPlace = CurDir + "/Results/TC4_Loss/"
+    ErrorOutputPlace = CurDir + "/Results/TC4_Errors/" 
     if not os.path.isdir(HistoryOutputPlace):
         os.mkdir(HistoryOutputPlace)
+    if not os.path.isdir(ErrorOutputPlace):
+        os.mkdir(ErrorOutputPlace)
     with open(HistoryOutputPlace + Code + ".pickle", "wb") as file:
         pickle.dump(Loss_History, file)
-
+    with open(ErrorOutputPlace + Code + ".pickle", "wb") as file:
+        pickle.dump(Strange_Happenings, file)
     Parameters["FullTime"] = FullTime
     Parameters["Len_los_history"] = len(Loss_History)
         
