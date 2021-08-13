@@ -385,14 +385,18 @@ def create(Inputs):
                             Labels = []
                             for i in range(len(TSPcoded)):
                                 Labels.append(Irrel_Label.copy())
-            
+            Attention_Mask = []
+            for i in range(len(Labels)):
+                Attention_Mask.append(1)
             for i in range(PadLength-len(Labels)):
                 TSPcoded.append(0)
                 Labels.append(Padded_Label.copy())
+                Attention_Mask.append(0)
  
             item = {}
             item['input_ids'] =  torch.tensor(TSPcoded)
             item['labels'] = torch.tensor(Labels)
+            item['attention_mask'] = torch.tensor(Attention_Mask)
 
             return item
 
@@ -414,21 +418,24 @@ def create(Inputs):
             optim.zero_grad()
             input_ids = batch['input_ids'].to(device)
             labels = batch['labels'].to(device)
-            Output = Model(input_ids)
+            att_mask = batch['attention_mask'].to(device)
+            Output = Model(input_ids, attention_mask = att_mask)
             Logits = Output.logits
             Loss = BCEWLL(Logits, labels)
             lossnum = Loss.item()
             if Loss_History:
                 if lossnum > Loss_History[-1]*100:
                     print("Jump in loss detected:")
-                    print(str(Loss_History[-1]) + " to " + str(lossnum) + " in step " + str(Counter))
+                    
                     Errordict = {}
                     Errordict["Step"] = Counter
                     Errordict["Old_Loss"] = Loss_History[-1]
                     Errordict["New_Loss"] = lossnum
+                    Errordict["Factor"] = lossnum/Loss_History[-1]
                     Errordict["Paragraph_ids"] = input_ids
                     Errordict["Labels"] = labels
                     Errordict["Paragraph_tokens_and_labels"] = []
+                    print(str(Loss_History[-1]) + " to " + str(lossnum) + "(factor " + str(Errordict["Factor"]) + ") in step " + str(Counter))
                     for jj in range(Batch_Size_Train):
                         Errordict["Paragraph_tokens_and_labels"].append((Tokenizer.convert_ids_to_tokens(input_ids[jj]), labels[jj]))
                     Errordict["Output"] = Output
