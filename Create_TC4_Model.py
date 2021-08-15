@@ -435,10 +435,10 @@ def create(Inputs):
                     Errordict["Paragraph_ids"] = input_ids
                     Errordict["Labels"] = labels
                     Errordict["Attention_Mask"] = att_mask
-                    Errordict["Paragraph_tokens_and_labels"] = []
+                    Errordict["Paragraph_tokens_and_labels_and_att"] = []
                     print(str(Loss_History[-1]) + " to " + str(lossnum) + "(factor " + str(Errordict["Factor"]) + ") in step " + str(Counter))
                     for jj in range(Batch_Size_Train):
-                        Errordict["Paragraph_tokens_and_labels"].append((Tokenizer.convert_ids_to_tokens(input_ids[jj]), labels[jj]))
+                        Errordict["Paragraph_tokens_and_labels_and_att"].append((Tokenizer.convert_ids_to_tokens(input_ids[jj]), labels[jj], att_mask[jj]))
                     Errordict["Output"] = Output
                     Strange_Happenings.append(Errordict)
             Loss_History.append(lossnum)
