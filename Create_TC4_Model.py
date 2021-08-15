@@ -434,6 +434,7 @@ def create(Inputs):
                     Errordict["Factor"] = lossnum/Loss_History[-1]
                     Errordict["Paragraph_ids"] = input_ids
                     Errordict["Labels"] = labels
+                    Errordict["Attention_Mask"] = att_mask
                     Errordict["Paragraph_tokens_and_labels"] = []
                     print(str(Loss_History[-1]) + " to " + str(lossnum) + "(factor " + str(Errordict["Factor"]) + ") in step " + str(Counter))
                     for jj in range(Batch_Size_Train):

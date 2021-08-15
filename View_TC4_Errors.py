@@ -3,7 +3,7 @@ ff = input()
 print("Which step? (Number or 'all')")
 gg = input()
 
-#0101 | 10947
+#1100 | 4899
 
 
 import pickle
@@ -34,20 +34,22 @@ for Errordict in Errors:
             Old_Loss = Errordict["Old_Loss"]
             New_Loss = Errordict["New_Loss"]
             Real_Labels = Errordict["Labels"]
+            Att_Mask = Errordict["Att_Mask"]
             Tokens_And_Labels = Errordict["Paragraph_tokens_and_labels"]
             Output = Errordict["Output"]
 
 
-
-for i in range(len(Tokens_And_Labels)):
-    Tokens = Tokens_And_Labels[i][0]
-    Labels = Tokens_And_Labels[i][1]
-    Logits = Output.logits[i].sigmoid()
-    for j in range(len(Tokens)):
-        if Labels[j][3] == float(1) or Labels[j][0] == float(1):
-            print(Tokens[j])
-            print(Labels[j])
-            print(Logits[j])
-            input()
-    print("______________________________________")
-    
+if gg != "all":
+    for i in range(len(Tokens_And_Labels)):
+        Tokens = Tokens_And_Labels[i][0]
+        Labels = Tokens_And_Labels[i][1]
+        Logits = Output.logits[i].sigmoid()
+        for j in range(len(Tokens)):
+            if Labels[j][3] == float(1) or Labels[j][0] == float(1):
+                print(Tokens[j])
+                print(Labels[j])
+                print(Att_Mask[j])
+                print(Logits[j])
+                input()
+        print("______________________________________")
+        
