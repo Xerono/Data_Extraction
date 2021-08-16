@@ -31,7 +31,7 @@ while True:
     import numpy as np
     import matplotlib.pyplot as plt
     plt.title(Code + " - " + str(Params["FullTime"]) + " (Max 288000)")
-    #plt.yscale('log')
+    plt.yscale('log')
     plt.plot(loss_history)
     plt.show()
 
