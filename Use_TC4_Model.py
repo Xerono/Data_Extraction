@@ -308,7 +308,7 @@ for mdl in Models:
                     KorrektKlassifikationsRate FLOAT NOT NULL,
                     Precision FLOAT NOT NULL,
                     Recall FLOAT NOT NULL,
-                    Fval FLOAT NOT NULL
+                    Fval FLOAT NOT NULL,
                     PRIMARY KEY(CutPar, CTN, Dele, DetLabels, Treshold)
                     );"""
             Cur.execute(sql_command)
