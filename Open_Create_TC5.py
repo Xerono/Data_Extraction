@@ -29,10 +29,10 @@ for i in range(4):
     for end in Ends:
         Batches[i].append(Fronts[i] + end)
 
-import Create_TC3_Model as NewTC3Model
+import Create_TC5_Model as NewTC5Model
 ThisBatch = Batches[This_Batch]
 import subprocess
 for Paras in ThisBatch:
-    NewTC3Model.create(tuple(Paras))
+    NewTC5Model.create(tuple(Paras))
 
 print("Finished batch " + str(This_Batch))

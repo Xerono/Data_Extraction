@@ -198,6 +198,7 @@ for mdl in Models:
                 # Full_Labels
 
                 Num_Of_All_Tokens += len(Full_Labels)
+
                 for i in range(len(Full_Labels)):
                     if Full_Labels[i][3] == float(1):
                         RealCoordinate += 1
