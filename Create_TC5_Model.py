@@ -387,7 +387,6 @@ def create(Inputs):
 
             (SP, Labels, NewCoords) = Replace((Current_Par, CordList, Detailed_Labels))
 
-            if CordList:
             if Coord_To_Noise:
                 if not Storage:
                     if CordList:
