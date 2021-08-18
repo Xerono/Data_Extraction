@@ -572,7 +572,7 @@ def create(Inputs):
     ModName =  mdl + "_Model/"
     Model.save_pretrained(CurDir + "/Models/" + ModName)
 
-
+    import pickle
     HistoryOutputPlace = CurDir + "/Results/TC5_Loss/"
     if not os.path.isdir(HistoryOutputPlace):
         os.mkdir(HistoryOutputPlace)
