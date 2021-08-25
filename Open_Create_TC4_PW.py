@@ -28,7 +28,7 @@ for front in Fronts:
         Batches[i].append(front + end)
     i+=1
 
-import Create_TC4_Model as NewTC4Model
+import Create_TC4_PW_Model as NewTC4Model
 ThisBatch = Batches[This_Batch]
 import subprocess
 for Paras in ThisBatch:
