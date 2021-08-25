@@ -52,7 +52,7 @@ All_Models = os.listdir(ModPath)
 Models = []
 from transformers import BertForTokenClassification
 for mdl in All_Models:
-    if "TC4_0" in mdl or "TC4_1" in mdl:
+    if "TC4_PW" in mdl:
         Models.append(mdl)
 for mdl in Models:
     for Treshold in Tresholds:
@@ -66,9 +66,9 @@ for mdl in Models:
         Model_Path = ModPath + mdl
 
         if DLabels:
-            num_labels = 12
+            num_labels = 11
         else:
-            num_labels = 9
+            num_labels = 8
         model = BertForTokenClassification.from_pretrained(Model_Path, num_labels=num_labels).to(device)
 
         model.eval()
@@ -79,13 +79,13 @@ for mdl in Models:
         
         Basic_Label_Noise = Zero_Label.copy()
         Basic_Label = Zero_Label.copy()
-        Basic_Label[1] = float(1)
-        Basic_Label_Noise[2] = float(1)
-        # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-        # Padded, Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+        Basic_Label[0] = float(1)
+        Basic_Label_Noise[1] = float(1)
+        # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+        # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
         # Grad, Min, (Sek), Lat, Grad, Min, (Sek), Long
         All_Results = {}
-        for i in range(12):
+        for i in range(11):
             All_Results[i] = 0
         AvgPerToken = []
         AvgPerPar = []
@@ -126,59 +126,59 @@ for mdl in Models:
                         AnteilLabels = []
                         for j in range(len(Tokenized_KoordAnteil)):
                             CurL = Zero_Label.copy()
-                            CurL[3] = float(1)
-                            if num_labels == 9:
+                            CurL[2] = float(1)
+                            if num_labels == 8:
                                 if len(PotCords) == 6:
                                     if k == 0 or k == 3:
-                                        CurL[4] = float(1)
+                                        CurL[3] = float(1)
                                     if k == 1 or k == 4:
-                                        CurL[5] = float(1)
+                                        CurL[4] = float(1)
                                     if k == 2:
-                                        CurL[7] = float(1)
+                                        CurL[6] = float(1)
                                     if k == 5:
-                                        CurL[8] = float(1)
+                                        CurL[7] = float(1)
                                 else:
                                     if k == 0 or k == 4:
-                                        CurL[4] = float(1)
+                                        CurL[3] = float(1)
                                     if k == 1 or k == 5:
-                                        CurL[5] = float(1)
+                                        CurL[4] = float(1)
                                     if k == 2 or k == 6:
-                                        CurL[6] = float(1)
+                                        CurL[5] = float(1)
                                     if k == 3:
-                                        CurL[7] = float(1)
+                                        CurL[6] = float(1)
                                     if k == 7:
-                                        CurL[8] = float(1)
-                            else: # 12 Label
+                                        CurL[7] = float(1)
+                            else: # 11 Label
                                 if len(PotCords) == 6:
                                     if k == 0:
-                                        CurL[4] = float(1)
+                                        CurL[3] = float(1)
                                     if k == 1:
-                                        CurL[5] = float(1)
-                                    if k == 2:
-                                        CurL[7] = float(1)
-                                    if k == 3:
-                                        CurL[9] = float(1)
-                                    if k == 4:
-                                        CurL[10] = float(1)
-                                    if k == 5:
-                                        CurL[8] = float(1)
-                                else:
-                                    if k == 0:
                                         CurL[4] = float(1)
-                                    if k == 1:
-                                        CurL[5] = float(1)
                                     if k == 2:
                                         CurL[6] = float(1)
                                     if k == 3:
-                                        CurL[7] = float(1)
+                                        CurL[8] = float(1)
                                     if k == 4:
                                         CurL[9] = float(1)
                                     if k == 5:
-                                        CurL[10] = float(1)
-                                    if k == 6:
-                                        CurL[11] = float(1)
-                                    if k == 7:
+                                        CurL[7] = float(1)
+                                else:
+                                    if k == 0:
+                                        CurL[3] = float(1)
+                                    if k == 1:
+                                        CurL[4] = float(1)
+                                    if k == 2:
+                                        CurL[5] = float(1)
+                                    if k == 3:
+                                        CurL[6] = float(1)
+                                    if k == 4:
                                         CurL[8] = float(1)
+                                    if k == 5:
+                                        CurL[9] = float(1)
+                                    if k == 6:
+                                        CurL[10] = float(1)
+                                    if k == 7:
+                                        CurL[7] = float(1)
                             AnteilLabels.append(CurL)
                         CordL.append((AnteilLabels, Tokenized_KoordAnteil))
                     for (ccLabels, TKA) in CordL:
@@ -200,7 +200,7 @@ for mdl in Models:
                 Num_Of_All_Tokens += len(Full_Labels)
 
                 for i in range(len(Full_Labels)):
-                    if Full_Labels[i][3] == float(1):
+                    if Full_Labels[i][2] == float(1):
                         RealCoordinate += 1
                 StrEnc = Tokenizer(SplitPar, return_tensors="pt").to(device)
                 Output = model(**StrEnc)
@@ -232,13 +232,13 @@ for mdl in Models:
                     Sum_For_Par += Sum_For_Token
                     AvgPerToken.append(Sum_For_Token)
 
-                    if Full_Labels[i][3] == float(1):
-                        if LabelsForPar[i][3] == float(1):
+                    if Full_Labels[i][2] == float(1):
+                        if LabelsForPar[i][2] == float(1):
                             Coord_Correct += 1
                         else:
                             Coord_False += 1
                     else:
-                        if LabelsForPar[i][3] == float(1):
+                        if LabelsForPar[i][2] == float(1):
                             FalsePositiveCoords += 1
                 Sum_For_Par = Sum_For_Par / len(TokenizedPar)
                 AvgPerPar.append(Sum_For_Par)
@@ -266,19 +266,19 @@ for mdl in Models:
         results_list = [(int(Cut_Par), int(CTN), int(Dele), int(DLabels), Treshold, Final_Time, Num_Of_All_Tokens,
                          Total_Corrects, Correct_Labels, RealCoordinate, Coord_Correct, Coord_False, FalsePositiveCoords, AvgPerPar, AvgPerToken,
                          All_Results[0], All_Results[1], All_Results[2], All_Results[3], All_Results[4], All_Results[5], 
-                         All_Results[6], All_Results[7], All_Results[8], All_Results[9], All_Results[10], All_Results[11],
+                         All_Results[6], All_Results[7], All_Results[8], All_Results[9], All_Results[10],
                          KKR, Precision, Recall, Fval
                          )]
                          
                         
         Con = sqlite3.connect(ResDatabase)
         Cur = Con.cursor()
-        sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TC4'"
+        sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TC4_PW'"
         res = Cur.execute(sql_command).fetchall()
-        # Padded, Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+        # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
         if res[0][0] == 0:
             sql_command = """
-                    CREATE TABLE TC4 (
+                    CREATE TABLE TC4_PW (
                     CutPar INTEGER NOT NULL,
                     CTN INTEGER NOT NULL,
                     Dele INTEGER NOT NULL,
@@ -294,18 +294,17 @@ for mdl in Models:
                     FalsePositiveCoords INTEGER NOT NULL,
                     AvgPerPar_AfterTresh FLOAT NOT NULL,
                     AvgPerToken_AfterTresh FLOAT NOT NULL,
-                    Class0_Padded INTEGER NOT NULL,
-                    Class1_Irrelevant INTEGER NOT NULL,
-                    Class2_Noise INTEGER NOT NULL,
-                    Class3_Coord INTEGER NOT NULL,
-                    Class4_Grad1 INTEGER NOT NULL,
-                    Class5_Min1 INTEGER NOT NULL,
-                    Class6_Sek1 INTEGER NOT NULL,
-                    Class7_Lat INTEGER NOT NULL,
-                    Class8_Long INTEGER NOT NULL,
-                    Class9_Grad2 INTEGER NOT NULL,
-                    Class10_Min2 INTEGER NOT NULL,
-                    Class11_Sek2 INTEGER NOT NULL,
+                    Class0_Irrelevant INTEGER NOT NULL,
+                    Class1_Noise INTEGER NOT NULL,
+                    Class2_Coord INTEGER NOT NULL,
+                    Class3_Grad1 INTEGER NOT NULL,
+                    Class4_Min1 INTEGER NOT NULL,
+                    Class5_Sek1 INTEGER NOT NULL,
+                    Class6_Lat INTEGER NOT NULL,
+                    Class7_Long INTEGER NOT NULL,
+                    Class8_Grad2 INTEGER NOT NULL,
+                    Class9_Min2 INTEGER NOT NULL,
+                    Class10_Sek2 INTEGER NOT NULL,
                     KorrektKlassifikationsRate FLOAT NOT NULL,
                     Precision FLOAT NOT NULL,
                     Recall FLOAT NOT NULL,
@@ -314,7 +313,7 @@ for mdl in Models:
                     );"""
             Cur.execute(sql_command)
             Con.commit()
-        sql_command = "INSERT INTO TC4 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        sql_command = "INSERT INTO TC4_PW VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         Cur.executemany(sql_command, results_list)
         Con.commit()
         Con.close()
