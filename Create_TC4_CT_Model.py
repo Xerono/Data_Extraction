@@ -63,7 +63,7 @@ def create(Inputs):
         (Six, Eight, NF, E) = mc.find_coordinates(Par)
         Found_Coords = Six + Eight
         Coords = []
-        if len(Found_Coords)>0 and len(mc.split_string(Par))<MaxLength:
+        if len(Found_Coords)>0 and len(Par)<MaxLength:
             for (PotCord, StringCord, Par) in Found_Coords:
                 Coords.append((PotCord, StringCord))
             PwC.append((Par, Coords))
@@ -80,9 +80,9 @@ def create(Inputs):
             Trainingdd.append(entry)
 
     import pickle
-    with open(CurDir + "/Files/TC4_PW_Training.pickle", "wb") as file:
+    with open(CurDir + "/Files/TC4_CT_Training.pickle", "wb") as file:
         pickle.dump(Trainingdd, file)
-    with open(CurDir + "/Files/TC4_PW_Test.pickle", "wb") as file:
+    with open(CurDir + "/Files/TC4_CT_Test.pickle", "wb") as file:
         pickle.dump(Testdd, file)
     PwC = Trainingdd
 
@@ -96,11 +96,13 @@ def create(Inputs):
     from transformers import AdamW
     from torch.utils.data import DataLoader
 
-    Symbols = ["•", "H", "V", "¢", ".", "j", "J", "°", ",", ";", "Њ", "Ј", "U",
-                   '"', "″", "'", "o", "@", "؇", "-", "¶", "(", ")", "Љ", "±",
+    Symbols = ["•",  "¢", ".", "°", ",", ";",
+                   '"', "″", "'",  "@",  "-", "¶", "(", ")",  "±",
                    ":", "µ", "/",
                    "8", "9"] # Found by trial & error
-    
+    # Unks have to be removed:
+    Unknowns = ["Љ", "؇", "Љ"]
+    Problems_in_Creation = [ "H", "V","Ј", "U","j", "J", "o"]
     int_to_label = {}
     int_to_label[0] = "Irrelevant"
     int_to_label[1] = "Noise"
@@ -116,95 +118,15 @@ def create(Inputs):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
-    Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
+    Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Files/Custom_Tokenizer/")
     optim = AdamW(Model.parameters(), lr=Learning_Rate)
 
-    # New in PW
-    orignumlabeldict = {}
-    Pos_Weight_Vector = []
-    for i in range(num_labels):
-        orignumlabeldict[i] = 0
-        Pos_Weight_Vector.append(0)
-    orignumlabeldict["All_Tokens"] = 0
-    for data in PwC:
-        tknzdpar = Tokenizer.tokenize(mc.split_string(data[0]))
-        orignumlabeldict["All_Tokens"] += len(tknzdpar)
-        Num_Of_All_Labels_For_Coords_In_This_Paragraph = 0
-        for (realcordlist, strcrd) in data[1]:
-            tknzdcrd = Tokenizer.tokenize(mc.split_string(strcrd))
-            Num_Of_All_Labels_For_Coords_In_This_Paragraph += len(tknzdcrd)
-            Num_Of_Labels_For_Coordinates_In_This_Paragraph = 0
-            if Detailed_Labels:
-                if len(realcordlist) == 8:
-                    # Target: Grad1, Min1, Sek1, Lat, Grad2, Min2, Sek2, Long
-                    # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-                    for item in realcordlist:
-                        Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(item)
-                    orignumlabeldict[3] += len(realcordlist[0])
-                    orignumlabeldict[4] += len(realcordlist[1])
-                    orignumlabeldict[5] += len(realcordlist[2])
-                    orignumlabeldict[6] += 1
-                    orignumlabeldict[7] += 1
-                    orignumlabeldict[8] += len(realcordlist[4])
-                    orignumlabeldict[9] += len(realcordlist[5])
-                    orignumlabeldict[10] += len(realcordlist[6])
-
-                else:
-                    # Target: Grad1, Min1, Lat, Grad2, Min2, Long
-                    # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2                   
-                    for item in realcordlist:
-                        Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(item)
-                    orignumlabeldict[3] += len(realcordlist[0])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[0])
-                    orignumlabeldict[4] += len(realcordlist[1])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[1])
-                    orignumlabeldict[8] += len(realcordlist[3])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[3])
-                    orignumlabeldict[9] += len(realcordlist[4])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[4])
-                    orignumlabeldict[6] += 1
-                    orignumlabeldict[7] += 1
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += 2
-            else:
-                if len(realcordlist) == 8:
-                    # Target: Grad1, Min1, Sek1, Lat, Grad2, Min2, Sek2, Long
-                    # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long   
-                    for item in realcordlist:
-                        Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(item)
-                    orignumlabeldict[3] += len(realcordlist[0]) + len(realcordlist[4])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[0]) + len(realcordlist[4])
-                    orignumlabeldict[4] += len(realcordlist[1]) + len(realcordlist[5])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[1]) + len(realcordlist[5])
-                    orignumlabeldict[5] += len(realcordlist[2]) + len(realcordlist[6])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[2]) + len(realcordlist[6])
-                    orignumlabeldict[6] += 1
-                    orignumlabeldict[7] += 1
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += 2
-                else:
-                    # Target: Grad1, Min1, Lat, Grad2, Min2, Long
-                    # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
-                    for item in realcordlist:
-                        Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(item)
-                    orignumlabeldict[3] += len(realcordlist[0]) + len(realcordlist[3])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[0]) + len(realcordlist[3])
-                    orignumlabeldict[4] += len(realcordlist[1]) + len(realcordlist[4])
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += len(realcordlist[1]) + len(realcordlist[4])
-                    orignumlabeldict[6] += 1
-                    orignumlabeldict[7] += 1
-                    Num_Of_Labels_For_Coordinates_In_This_Paragraph += 2
-            orignumlabeldict[1] += (len(tknzdcrd) - int(Num_Of_Labels_For_Coordinates_In_This_Paragraph/2))
-            orignumlabeldict[2] += int(Num_Of_Labels_For_Coordinates_In_This_Paragraph/2)
-
-
-        orignumlabeldict[0] += (len(tknzdpar) - Num_Of_All_Labels_For_Coords_In_This_Paragraph)
-
-    Orig_Num_Of_All_Tokens = orignumlabeldict["All_Tokens"]
-    for i in range(len(Pos_Weight_Vector)):
-        if orignumlabeldict[i] > 0:
-            Pos_Weight_Vector[i] = (Orig_Num_Of_All_Tokens - orignumlabeldict[i]) / orignumlabeldict[i]
-    print("Pos_Weight_Vector: " + str(Pos_Weight_Vector))
-
-    # End new in PW
+    for sym in Symbols:
+        if Tokenizer.tokenize(sym) == ['[UNK]']:
+            print("Error:")
+            print(sym)
+            print("tokenizes to '[UNK]'")
+            input()
     
     def Labelvector_To_Label(Labels):
         Max = -1
@@ -369,12 +291,12 @@ def create(Inputs):
             FullNewCoords.append((PotCoords, CoordsString, Labels))
         Coords_In_This_Par = []
         FullLabels = []
-        SplitPar = mc.split_string(Par)
+        SplitPar = Par
         TokenizedSplitPar = Tokenizer.tokenize(SplitPar)
         for i in range(len(TokenizedSplitPar)):
             FullLabels.append(Basic_Label.copy())
         for (PotCoords, CoordsString, Labels) in FullNewCoords:
-            CoordsSplit = Tokenizer.tokenize(mc.split_string(CoordsString))
+            CoordsSplit = Tokenizer.tokenize(CoordsString)
             for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
                 if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
                     for j in range(len(Labels)):
@@ -391,7 +313,7 @@ def create(Inputs):
             for i in range(num_labels):
                 Irrel_Label.append(float(0))
                 Padded_Label.append(float(0))
- #Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+ # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
 
             Irrel_Label[0] = float(1)
             random.shuffle(PwC)
@@ -422,7 +344,7 @@ def create(Inputs):
                     Post = Post + Word + " "
                 Current_Par = Current_Par.replace(PrePar, Pre)
                 Current_Par = Current_Par.replace(PostPar, Post)
-
+            
             (SP, Labels, CoordsInPar) = Replace((Current_Par, CordList))
 
             if Coord_To_Noise:
@@ -436,7 +358,7 @@ def create(Inputs):
                             newcs = ""
                             for teilstring in newc:
                                 newcs += teilstring
-                            NoisePar = NoisePar.replace(mc.split_string(StringC), mc.split_string(newcs))
+                            NoisePar = NoisePar.replace(StringC, newcs)
                         NoisePar = mc.split_string(NoisePar)
                         TokenizedNP = Tokenizer.tokenize(NoisePar)
                         for i in range(len(TokenizedNP)):
@@ -455,7 +377,7 @@ def create(Inputs):
                 if random.choice([1,2,3,4]) == 1:
                     Slices_With_Coords = []
                     for i in range(1, len(Labels)-1):
-                        if Labels[i][3] == float(1):
+                        if Labels[i][2] == float(1):
                             Slices_With_Coords.append(i)
                     if Slices_With_Coords:
                         To_Delete = [] # Deleting on lists while traversing the list is bothersome
@@ -489,7 +411,7 @@ def create(Inputs):
     import time
     TrainData = Dataset()
     Training_Loader = DataLoader(TrainData, batch_size = Batch_Size_Train)
-    BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = torch.tensor(Pos_Weight_Vector)).to(device)
+    BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = torch.ones([num_labels])).to(device)
     Loss_History = []
     Counter = 0
     Strange_Happenings = []
@@ -536,13 +458,13 @@ def create(Inputs):
     global Storage
     Storage = False
     FullTime = endtime - Starttime
-    mdl = "TC4_PW_" + Code
+    mdl = "TC4_CT_" + Code
     ModName = mdl + "_Model/"
     Model.save_pretrained(CurDir + "/Models/" + ModName)
 
     import pickle
-    HistoryOutputPlace = CurDir + "/Results/TC4_PW_Loss/"
-    ErrorOutputPlace = CurDir + "/Results/TC4_PW_Errors/" 
+    HistoryOutputPlace = CurDir + "/Results/TC4_CT_Loss/"
+    ErrorOutputPlace = CurDir + "/Results/TC4_CT_Errors/" 
     if not os.path.isdir(HistoryOutputPlace):
         os.mkdir(HistoryOutputPlace)
     if not os.path.isdir(ErrorOutputPlace):
@@ -551,7 +473,6 @@ def create(Inputs):
         pickle.dump(Loss_History, file)
     with open(ErrorOutputPlace + Code + ".pickle", "wb") as file:
         pickle.dump(Strange_Happenings, file)
-    Parameters["Pos_Weight_Vector"] = Pos_Weight_Vector
     Parameters["FullTime"] = FullTime
     Parameters["Len_los_history"] = len(Loss_History)
     Parameters["Time_Per_Batch"] = Time_For_Batch    
