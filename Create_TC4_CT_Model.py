@@ -118,7 +118,7 @@ def create(Inputs):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
-    Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Files/Custom_Tokenizer/")
+    Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
     optim = AdamW(Model.parameters(), lr=Learning_Rate)
 
     for sym in Symbols:

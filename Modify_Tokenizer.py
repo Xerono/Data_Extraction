@@ -5,7 +5,7 @@ Basemodel = "bert-base-cased"
 OriginalTokenizer = BertTokenizerFast.from_pretrained(Basemodel)
 
 import os
-Filesfolder = os.getcwd() + "/Files/"
+Filesfolder = os.getcwd() + "/"
 Tokenizersave = "Custom_Tokenizer/"
 OriginalTokenizer.save_pretrained(Filesfolder + Tokenizersave)
 
