@@ -71,9 +71,8 @@ def create(Inputs):
         if len(Found_Coords)>0:
             for (PotCord, StringCord, Par) in Found_Coords:
                 Coords.append((PotCord, StringCord))
-        if len(mc.split_string(Par))<MaxLength:
-            All_Paragraphs.append((Par, Coords))
-
+            if len(mc.split_string(Par))<MaxLength:
+                All_Paragraphs.append((Par, Coords))
 
     LabelDict, IntToLabel = mc.labels_to_int()
 

@@ -58,7 +58,7 @@ def create(Inputs):
     import Module_Coordinates as mc
 
     PwC = []
-
+    All_Coordinates = []
     for (FPID, File, Par) in OriginalPars:
         (Six, Eight, NF, E) = mc.find_coordinates(Par)
         Found_Coords = Six + Eight
@@ -66,27 +66,8 @@ def create(Inputs):
         if len(Found_Coords)>0 and len(Par)<MaxLength:
             for (PotCord, StringCord, Par) in Found_Coords:
                 Coords.append((PotCord, StringCord))
+                All_Coordinates.append((PotCord, StringCord))
             PwC.append((Par, Coords))
-
-    Alle_Daten = len(PwC)
-    TestDataLength = int(Alle_Daten/100*TestPercentage)
-    Testdd = []
-    Trainingdd = []
-
-    for entry in PwC:
-        if len(Testdd)< TestDataLength:
-            Testdd.append(entry)
-        else:
-            Trainingdd.append(entry)
-
-    import pickle
-    with open(CurDir + "/Files/TC4_CT_Training.pickle", "wb") as file:
-        pickle.dump(Trainingdd, file)
-    with open(CurDir + "/Files/TC4_CT_Test.pickle", "wb") as file:
-        pickle.dump(Testdd, file)
-    PwC = Trainingdd
-
-
 
     import torch
 
@@ -122,6 +103,7 @@ def create(Inputs):
     optim = AdamW(Model.parameters(), lr=Learning_Rate)
 
     # New in CT
+    
     for sym in Symbols:
         if Tokenizer.tokenize(sym) == ['[UNK]']:
             print("Error:")
@@ -130,7 +112,8 @@ def create(Inputs):
             input()
     # End New in CT
 
-    Pos_Weight_Vector = torch.ones([num_labels]) # Positional Weights are worse than without
+
+    Pos_Weight_Vector = torch.ones([num_labels])
     
     def Labelvector_To_Label(Labels):
         Max = -1
@@ -147,166 +130,131 @@ def create(Inputs):
             Labels_For_This_Token.append(int_to_label[i])
         return Labels_For_This_Token
 
-    def generate_noise():
-        Basic_Label = []     
+
+    # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+    # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
+
+    def get_Labels_for_coords(TCord, CordL, SCord):
+        Zero_Label = []
         for i in range(num_labels):
-            Basic_Label.append(float(0))
-                            # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
+            Zero_Label.append(float(0))
+        Label_Grad1 = Zero_Label.copy()
+        Label_Grad1[2] = float(1)
+        Label_Grad1[3] = float(1)
 
-                            # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-        Noise = ""
-        Labels = []
-        Basic_Label[1] = float(1)
-        for i in range(random.choice([1,2])):
-            Noise = Noise + random.choice(Symbols)
-            CurLabel = Basic_Label.copy()
-            Labels.append(CurLabel)
-            
-        return (Noise, Labels)
+        Label_Min1 = Zero_Label.copy()
+        Label_Min1[2] = float(1)
+        Label_Min1[4] = float(1)
 
-    def generate_coords():
-       
-        PotCoords = []
-        Labels = []
-        CoordsString = ""
-        Basic_Label = []
-        EightCoords = random.choice([True, False])
+        Label_Sek1 = Zero_Label.copy()
+        Label_Sek1[2] = float(1)
+        Label_Sek1[5] = float(1)
+
+        Label_Lat = Zero_Label.copy()
+        Label_Lat[2] = float(1)
+        Label_Lat[6] = float(1)
+        Label_Long = Zero_Label.copy()
+        Label_Long[2] = float(1)
+        Label_Long[7] = float(1)
         
-     # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
-        for i in range(num_labels):
-            Basic_Label.append(float(0))
-     # Irrelevant, Noise, Coord, Grad, Min, Sek, Lat, Long
-            
-
-        Grad1 = str(random.randint(0, 90))
-        for i in range(len(Grad1)):
-            Cur = Basic_Label.copy()
-            Cur[2] = float(1)
-            Cur[3] = float(1)
-            Labels.append(Cur)
-        (Noise, NLabels) = generate_noise()
-        CoordsString = CoordsString + Grad1 + Noise
-        for NoiseLabels in NLabels:
-            Labels.append(NoiseLabels)
-
-        Min1 = str(random.randint(0, 60))
-        for i in range(len(Min1)):
-            Cur = Basic_Label.copy()
-            Cur[2] = float(1)
-            Cur[4] = float(1)
-            Labels.append(Cur)
-        (Noise, NLabels) = generate_noise()
-        CoordsString = CoordsString + Min1 + Noise
-        for NoiseLabels in NLabels:
-            Labels.append(NoiseLabels)
-            
-        if EightCoords:
-            Sek1 = str(random.randint(0, 60))
-            for i in range(len(Sek1)):
-                Cur = Basic_Label.copy()
-                Cur[2] = float(1)
-                Cur[5] = float(1)
-                Labels.append(Cur)
-            (Noise, NLabels) = generate_noise()
-            CoordsString = CoordsString + Sek1 + Noise
-            for NoiseLabels in NLabels:
-                Labels.append(NoiseLabels)
-
-        Lat = random.choice(["N", "S"])
-        Cur = Basic_Label.copy()
-        Cur[2] = float(1)
-        Cur[6] = float(1)
-        Labels.append(Cur)
-        (Noise, NLabels) = generate_noise()
-        CoordsString = CoordsString + Lat + Noise
-        for NoiseLabels in NLabels:
-            Labels.append(NoiseLabels)
-
-        Grad2 = str(random.randint(0, 90))
-        for i in range(len(Grad2)):
-            Cur = Basic_Label.copy()
-            Cur[2] = float(1)
-            if Detailed_Labels:
-                Cur[8] = float(1)
-            else:
-                Cur[3] = float(1)
-            Labels.append(Cur)
-        (Noise, NLabels) = generate_noise()
-        CoordsString = CoordsString + Grad2 + Noise
-        for NoiseLabels in NLabels:
-            Labels.append(NoiseLabels)
-            
-        Min2 = str(random.randint(0, 60))
-        for i in range(len(Min2)):
-            Cur = Basic_Label.copy()
-            Cur[2] = float(1)
-            if Detailed_Labels:
-                Cur[9] = float(1)
-            else:
-                Cur[4] = float(1)
-            Labels.append(Cur)
-        (Noise, NLabels) = generate_noise()
-        CoordsString = CoordsString + Min2 + Noise
-        for NoiseLabels in NLabels:
-            Labels.append(NoiseLabels)
-            
-        if EightCoords:
-            Sek2 = str(random.randint(0, 60))
-            for i in range(len(Sek2)):
-                Cur = Basic_Label.copy()
-                Cur[2] = float(1)
-                if Detailed_Labels:
-                    Cur[10] = float(1)
-                else:
-                    Cur[5] = float(1)
-                Labels.append(Cur)
-            (Noise, NLabels) = generate_noise()
-            CoordsString = CoordsString + Sek2 + Noise
-            for NoiseLabels in NLabels:
-                Labels.append(NoiseLabels)
-
-        Lon = random.choice(["W", "E"])
-        Cur = Basic_Label.copy()
-        Cur[2] = float(1)
-        Cur[7] = float(1)
-        Labels.append(Cur)
-        CoordsString = CoordsString + Lon
-
-        if EightCoords:
-            PotCoords = (Grad1, Min1, Sek1, Lat, Grad2, Min2, Sek2, Lon)
-        else:
-            PotCoords = (Grad1, Min1, Lat, Grad2, Min2, Lon)
-        return(PotCoords, CoordsString, Labels)
-
-            
-    
+        Label_Noise = Zero_Label.copy()
+        Label_Noise[1] = float(1)
         
+        add = 0
+        if num_labels == 11:
+            add = 5
+        Label_Grad2 = Zero_Label.copy()
+        Label_Grad2[2] = float(1)
+        Label_Grad2[3+add] = float(1)
+        Label_Min2 = Zero_Label.copy()
+        Label_Min2[2] = float(1)
+        Label_Min2[4+add] = float(1)
+        Label_Sek2 = Zero_Label.copy()
+        Label_Sek2[2] = float(1)
+        Label_Sek2[5+add] = float(1)
+        All_Labels_8 = [Label_Grad1, Label_Min1, Label_Sek1, Label_Lat, Label_Grad2, Label_Min2, Label_Sek2, Label_Long]
+        All_Labels_6 = [Label_Grad1, Label_Min1, Label_Lat, Label_Grad2, Label_Min2, Label_Long]
+        Labels = []
+        for i in TCord:
+            Labels.append(False)
+        for i in range(len(CordL)):
+            Cur_Tokens = Tokenizer.tokenize(CordL[i])
+            Cur_Tokens_Following = Cur_Tokens.copy()
+            Cur_Tokens_Following[0] = "##" + Cur_Tokens_Following[0]
+            for j in range(len(TCord)-len(Cur_Tokens)+1):
+                if TCord[j:j+len(Cur_Tokens)] == Cur_Tokens or TCord[j:j+len(Cur_Tokens)] == Cur_Tokens_Following:
+                    for k in range(len(Cur_Tokens)):
+                        if not Labels[j+k]:
+                            if len(CordL) == 8:
+                                Labels[j+k] = All_Labels_8[i]
+                            else:
+                                Labels[j+k] = All_Labels_6[i]
+        for i in range(len(Labels)):
+            if not Labels[i]:
+                Labels[i] = Label_Noise
+
+        return Labels
+
+
+
+
+
     def Replace(ParCord):
-        Basic_Label = []
+        Irrel_Label = []
         for i in range(num_labels):
-            Basic_Label.append(float(0))
-
-        Basic_Label[0] = float(1)
+            Irrel_Label.append(float(0))
+        Irrel_Label[0] = float(1)
         (Par, ListOfCoords) = ParCord
-        FullNewCoords = []
-        for (Coord, String) in ListOfCoords:
-            (PotCoords, CoordsString, Labels) = generate_coords()
-            Par = Par.replace(String, CoordsString)
-            FullNewCoords.append((PotCoords, CoordsString, Labels))
+        NSLIST = ["N", "S"]
+        WELIST = ["W", "E"]
+        
         Coords_In_This_Par = []
+
+        while Coords_In_This_Par == []: # If the change of coordinates results in something the regex doesnt find
+            ParCopy = Par
+            for (Cord, StrCord) in ListOfCoords:
+                random.shuffle(All_Coordinates)
+                (NewCords, StrNewCords) = All_Coordinates[0]
+                for i in range(len(NewCords)):
+                    if NewCords[i].isnumeric():
+                        StrNewCords = StrNewCords.replace(NewCords[i], str(random.randint(0, 90)))
+                    else:
+                        if NewCords[i] in NSLIST:
+                            StrNewCords = StrNewCords.replace(NewCords[i], random.choice(NSLIST))
+                        else:
+                            StrNewCords = StrNewCords.replace(NewCords[i], random.choice(WELIST))
+
+                ParCopy = ParCopy.replace(StrCord, StrNewCords)
+            (Six, Eight, NF, E) = mc.find_coordinates(ParCopy)
+            Found_Coords = Six + Eight
+            for (Coordlist, StringCoord, Pppar) in Found_Coords:
+                Coords_In_This_Par.append((Coordlist, StringCoord))
+
+        Par = ParCopy
+        # Par
+        # Coords_In_This_Par
+        # Now: Labels
+        TokenPar = Tokenizer.tokenize(Par)
+        TokenCords = []
+        for (CLIST, SCORD) in Coords_In_This_Par:
+            TokenCords.append((Tokenizer.tokenize(SCORD), CLIST, SCORD))
+            
         FullLabels = []
-        SplitPar = Par
-        TokenizedSplitPar = Tokenizer.tokenize(SplitPar)
-        for i in range(len(TokenizedSplitPar)):
-            FullLabels.append(Basic_Label.copy())
-        for (PotCoords, CoordsString, Labels) in FullNewCoords:
-            CoordsSplit = Tokenizer.tokenize(CoordsString)
-            for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
-                if TokenizedSplitPar[i:i+len(CoordsSplit)] == CoordsSplit:
-                    for j in range(len(Labels)):
-                        FullLabels[i+j] = Labels[j]
-            Coords_In_This_Par.append((PotCoords, CoordsString))
-        return(SplitPar, FullLabels, Coords_In_This_Par)
+        for i in TokenPar:
+            FullLabels.append(False)
+        for (TCord, CordL, SCord) in TokenCords:
+            CordLabels = get_Labels_for_coords(TCord, CordL, SCord)                      
+            LenOfCords = len(TCord)
+            for i in range(len(TokenPar)-LenOfCords):
+                if TokenPar[i:i+LenOfCords] == TCord:
+                    for j in range(LenOfCords):
+                        if not FullLabels[i+j]:
+                            FullLabels[i+j] = CordLabels[j]
+        for i in range(len(FullLabels)):
+            if not FullLabels[i]:
+                FullLabels[i] = Irrel_Label
+
+        return(Par, FullLabels, Coords_In_This_Par)
 
     class Dataset(torch.utils.data.Dataset):
         def __getitem__(self, idx):
@@ -435,7 +383,7 @@ def create(Inputs):
             if Loss_History:
                 if lossnum > Loss_History[-1]*100:
                     print("Jump in loss detected:")
-                    
+
                     Errordict = {}
                     Errordict["Step"] = Counter
                     Errordict["Old_Loss"] = Loss_History[-1]
@@ -462,13 +410,13 @@ def create(Inputs):
     global Storage
     Storage = False
     FullTime = endtime - Starttime
-    mdl = "TC4_CT_" + Code
+    mdl = "TC6_" + Code
     ModName = mdl + "_Model/"
     Model.save_pretrained(CurDir + "/Models/" + ModName)
 
     import pickle
-    HistoryOutputPlace = CurDir + "/Results/TC4_CT_Loss/"
-    ErrorOutputPlace = CurDir + "/Results/TC4_CT_Errors/" 
+    HistoryOutputPlace = CurDir + "/Results/TC6_Loss/"
+    ErrorOutputPlace = CurDir + "/Results/TC6_Errors/" 
     if not os.path.isdir(HistoryOutputPlace):
         os.mkdir(HistoryOutputPlace)
     if not os.path.isdir(ErrorOutputPlace):

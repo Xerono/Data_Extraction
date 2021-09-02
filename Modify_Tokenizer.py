@@ -33,6 +33,11 @@ for line in OriginalVocabFile:
                     if len(FollowUp) > 1: # Single numbers are fine
                         if FollowUp.isnumeric():
                             CanWeKeepThis = False
+                    # Remove short combinations with NSWE
+                    if "n" in FollowUp or "s" in FollowUp or "w" in FollowUp or "e" in FollowUp or "N" in FollowUp or "S" in FollowUp or "W" in FollowUp or "E" in FollowUp: 
+                        if len(line) == 4:
+                            CanWeKeepThis = False
+                
     if CanWeKeepThis:
         NewVocab.append(line)
     else:
@@ -69,6 +74,7 @@ with open(Filesfolder + Tokenizersave + "tokenizer.json", "w", encoding = "UTF-8
     json.dump(Tokenizer, file)
 
 NewTokenizer = BertTokenizerFast.from_pretrained(Filesfolder + Tokenizersave)
-Test = "Das ist ein Testsatz. 123 ist eine Zahl, 1 2 3 4ab teilweise auch. 23 45"
+Test = "Das ist ein Testsatz. 123 ist eine Zahl, 1 2 3 4ab teilweise auch. 23 45n, 23wv 12VN"
+print(Test)
 print("Original: " + str(OriginalTokenizer.tokenize(Test)))
 print("Modified: " + str(NewTokenizer.tokenize(Test)))

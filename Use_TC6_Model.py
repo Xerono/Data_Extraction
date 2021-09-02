@@ -40,7 +40,7 @@ import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PreTrainedModel = 'bert-base-cased'
 from transformers import BertTokenizerFast
-Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
+Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
 
 
 
@@ -52,7 +52,7 @@ All_Models = os.listdir(ModPath)
 Models = []
 from transformers import BertForTokenClassification
 for mdl in All_Models:
-    if "TC4_PW" in mdl:
+    if "TC6" in mdl:
         Models.append(mdl)
 for mdl in Models:
     for Treshold in Tresholds:
@@ -102,7 +102,7 @@ for mdl in Models:
             if Counter % 10000 == 0:
                 print(mdl + " - "  + str(Treshold) + " - " + str(Counter) + "/" + str(len(Dataset)) + " - " +  str(time.time() - Starttime))
             Counter += 1
-            SplitPar = mc.split_string(Par)
+            SplitPar = Par
             if len(SplitPar)<Maxlength:
                 Full_Labels = []
                 TokenizedPar = Tokenizer.tokenize(SplitPar)
@@ -111,7 +111,7 @@ for mdl in Models:
                 All_Labels = []
                 for (PotCords, StringCords) in ListOfCoords: # Find correct labels for each token
                     i = 0
-                    TokenizedCooStr = Tokenizer.tokenize(mc.split_string(StringCords))
+                    TokenizedCooStr = Tokenizer.tokenize(StringCords)
                     TokenizedCoords = []
                     for i in range(len(TokenizedPar)-len(TokenizedCooStr)):
                         if TokenizedPar[i:i+len(TokenizedCooStr)] == TokenizedCooStr:
@@ -122,7 +122,7 @@ for mdl in Models:
                         clabels.append(Basic_Label_Noise.copy())
                     CordL = []
                     for k in range(len(PotCords)):
-                        Tokenized_KoordAnteil = Tokenizer.tokenize(mc.split_string(PotCords[k]))
+                        Tokenized_KoordAnteil = Tokenizer.tokenize(PotCords[k])
                         AnteilLabels = []
                         for j in range(len(Tokenized_KoordAnteil)):
                             CurL = Zero_Label.copy()
@@ -273,12 +273,12 @@ for mdl in Models:
                         
         Con = sqlite3.connect(ResDatabase)
         Cur = Con.cursor()
-        sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TC4_PW'"
+        sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TC6'"
         res = Cur.execute(sql_command).fetchall()
         # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
         if res[0][0] == 0:
             sql_command = """
-                    CREATE TABLE TC4_PW (
+                    CREATE TABLE TC6 (
                     CutPar INTEGER NOT NULL,
                     CTN INTEGER NOT NULL,
                     Dele INTEGER NOT NULL,
@@ -313,7 +313,7 @@ for mdl in Models:
                     );"""
             Cur.execute(sql_command)
             Con.commit()
-        sql_command = "INSERT INTO TC4_PW VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        sql_command = "INSERT INTO TC6 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         Cur.executemany(sql_command, results_list)
         Con.commit()
         Con.close()
