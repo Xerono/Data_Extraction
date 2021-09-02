@@ -19,7 +19,7 @@ def create(Inputs):
     Basemodel = "bert-base-cased"
     #Basemodel = "distilbert-base-uncased"
 
-    PadLength = 320
+    PadLength = 340
     DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
     Stoptime = 28800 # 8 hours
     Batch_Size_Train = 8
