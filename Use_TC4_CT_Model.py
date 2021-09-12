@@ -1,7 +1,7 @@
 import os
 import pickle
 import time
-Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99)]
+Tresholds = [float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99)]
 
 
 CurDir = os.getcwd()
@@ -17,7 +17,10 @@ Con.close()
 
 ResDatabase = CurDir + "/Results/Results.db"
 
-Maxlength = 917
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+PreTrainedModel = 'bert-base-cased'
+from transformers import BertTokenizerFast
+Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
 
 import Module_Coordinates as mc
 
@@ -25,22 +28,20 @@ Dataset = []
 Numbers = [0,0,0]
 LabelDict, IntLabelDict = mc.labels_to_int()
 for (FPID, File, Par) in OriginalPars:
-    (Six, Eight, NE, E) = mc.find_coordinates(Par)
-    CordsInThis = []
-    Numbers[0] = Numbers[0] + len(Six)
-    Numbers[1] = Numbers[1] + len(Eight)
-    if len(Six) + len(Eight) == 0:
-        Numbers[2] = Numbers[2] + 1
-    for (Coords, StringC, Par) in Six + Eight:
-        CordsInThis.append((Coords, StringC))
-    Dataset.append((Par, CordsInThis))
+    if len(Tokenizer.tokenize(Par)) <= 512:
+        (Six, Eight, NE, E) = mc.find_coordinates(Par)
+        CordsInThis = []
+        Numbers[0] = Numbers[0] + len(Six)
+        Numbers[1] = Numbers[1] + len(Eight)
+        if len(Six) + len(Eight) == 0:
+            Numbers[2] = Numbers[2] + 1
+        for (Coords, StringC, Par) in Six + Eight:
+            CordsInThis.append((Coords, StringC))
+        Dataset.append((Par, CordsInThis))
 
 import torch
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PreTrainedModel = 'bert-base-cased'
-from transformers import BertTokenizerFast
-Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
+
 
 
 
@@ -103,96 +104,95 @@ for mdl in Models:
                 print(mdl + " - "  + str(Treshold) + " - " + str(Counter) + "/" + str(len(Dataset)) + " - " +  str(time.time() - Starttime))
             Counter += 1
             SplitPar = Par
-            if len(SplitPar)<Maxlength:
-                Full_Labels = []
-                TokenizedPar = Tokenizer.tokenize(SplitPar)
-                for i in range(len(TokenizedPar)):
-                    Full_Labels.append(Basic_Label.copy())
-                All_Labels = []
-                for (PotCords, StringCords) in ListOfCoords: # Find correct labels for each token
-                    i = 0
-                    TokenizedCooStr = Tokenizer.tokenize(StringCords)
-                    TokenizedCoords = []
-                    for i in range(len(TokenizedPar)-len(TokenizedCooStr)):
-                        if TokenizedPar[i:i+len(TokenizedCooStr)] == TokenizedCooStr:
-                            StartOfCoords = i
-                            
-                    clabels = []
+            Full_Labels = []
+            TokenizedPar = Tokenizer.tokenize(SplitPar)
+            for i in range(len(TokenizedPar)):
+                Full_Labels.append(Basic_Label.copy())
+            All_Labels = []
+            for (PotCords, StringCords) in ListOfCoords: # Find correct labels for each token
+                i = 0
+                TokenizedCooStr = Tokenizer.tokenize(StringCords)
+                TokenizedCoords = []
+                for i in range(len(TokenizedPar)-len(TokenizedCooStr)):
+                    if TokenizedPar[i:i+len(TokenizedCooStr)] == TokenizedCooStr:
+                        StartOfCoords = i
+                        
+                clabels = []
+                for i in range(len(TokenizedCooStr)):
+                    clabels.append(Basic_Label_Noise.copy())
+                CordL = []
+                for k in range(len(PotCords)):
+                    Tokenized_KoordAnteil = Tokenizer.tokenize(PotCords[k])
+                    AnteilLabels = []
+                    for j in range(len(Tokenized_KoordAnteil)):
+                        CurL = Zero_Label.copy()
+                        CurL[2] = float(1)
+                        if num_labels == 8:
+                            if len(PotCords) == 6:
+                                if k == 0 or k == 3:
+                                    CurL[3] = float(1)
+                                if k == 1 or k == 4:
+                                    CurL[4] = float(1)
+                                if k == 2:
+                                    CurL[6] = float(1)
+                                if k == 5:
+                                    CurL[7] = float(1)
+                            else:
+                                if k == 0 or k == 4:
+                                    CurL[3] = float(1)
+                                if k == 1 or k == 5:
+                                    CurL[4] = float(1)
+                                if k == 2 or k == 6:
+                                    CurL[5] = float(1)
+                                if k == 3:
+                                    CurL[6] = float(1)
+                                if k == 7:
+                                    CurL[7] = float(1)
+                        else: # 11 Label
+                            if len(PotCords) == 6:
+                                if k == 0:
+                                    CurL[3] = float(1)
+                                if k == 1:
+                                    CurL[4] = float(1)
+                                if k == 2:
+                                    CurL[6] = float(1)
+                                if k == 3:
+                                    CurL[8] = float(1)
+                                if k == 4:
+                                    CurL[9] = float(1)
+                                if k == 5:
+                                    CurL[7] = float(1)
+                            else:
+                                if k == 0:
+                                    CurL[3] = float(1)
+                                if k == 1:
+                                    CurL[4] = float(1)
+                                if k == 2:
+                                    CurL[5] = float(1)
+                                if k == 3:
+                                    CurL[6] = float(1)
+                                if k == 4:
+                                    CurL[8] = float(1)
+                                if k == 5:
+                                    CurL[9] = float(1)
+                                if k == 6:
+                                    CurL[10] = float(1)
+                                if k == 7:
+                                    CurL[7] = float(1)
+                        AnteilLabels.append(CurL)
+                    CordL.append((AnteilLabels, Tokenized_KoordAnteil))
+                for (ccLabels, TKA) in CordL:
+                    CFF = False
                     for i in range(len(TokenizedCooStr)):
-                        clabels.append(Basic_Label_Noise.copy())
-                    CordL = []
-                    for k in range(len(PotCords)):
-                        Tokenized_KoordAnteil = Tokenizer.tokenize(PotCords[k])
-                        AnteilLabels = []
-                        for j in range(len(Tokenized_KoordAnteil)):
-                            CurL = Zero_Label.copy()
-                            CurL[2] = float(1)
-                            if num_labels == 8:
-                                if len(PotCords) == 6:
-                                    if k == 0 or k == 3:
-                                        CurL[3] = float(1)
-                                    if k == 1 or k == 4:
-                                        CurL[4] = float(1)
-                                    if k == 2:
-                                        CurL[6] = float(1)
-                                    if k == 5:
-                                        CurL[7] = float(1)
-                                else:
-                                    if k == 0 or k == 4:
-                                        CurL[3] = float(1)
-                                    if k == 1 or k == 5:
-                                        CurL[4] = float(1)
-                                    if k == 2 or k == 6:
-                                        CurL[5] = float(1)
-                                    if k == 3:
-                                        CurL[6] = float(1)
-                                    if k == 7:
-                                        CurL[7] = float(1)
-                            else: # 11 Label
-                                if len(PotCords) == 6:
-                                    if k == 0:
-                                        CurL[3] = float(1)
-                                    if k == 1:
-                                        CurL[4] = float(1)
-                                    if k == 2:
-                                        CurL[6] = float(1)
-                                    if k == 3:
-                                        CurL[8] = float(1)
-                                    if k == 4:
-                                        CurL[9] = float(1)
-                                    if k == 5:
-                                        CurL[7] = float(1)
-                                else:
-                                    if k == 0:
-                                        CurL[3] = float(1)
-                                    if k == 1:
-                                        CurL[4] = float(1)
-                                    if k == 2:
-                                        CurL[5] = float(1)
-                                    if k == 3:
-                                        CurL[6] = float(1)
-                                    if k == 4:
-                                        CurL[8] = float(1)
-                                    if k == 5:
-                                        CurL[9] = float(1)
-                                    if k == 6:
-                                        CurL[10] = float(1)
-                                    if k == 7:
-                                        CurL[7] = float(1)
-                            AnteilLabels.append(CurL)
-                        CordL.append((AnteilLabels, Tokenized_KoordAnteil))
-                    for (ccLabels, TKA) in CordL:
-                        CFF = False
-                        for i in range(len(TokenizedCooStr)):
-                            if not CFF and TokenizedCooStr[i:i+len(TKA)] == TKA:
-                                for j in range(len(ccLabels)):
-                                    clabels[i+j] = ccLabels[j]
-                                CFF = True
-                    All_Labels.append((clabels, StartOfCoords))
-                
-                for (ccLabels, SoC) in All_Labels:
-                    for i in range(len(ccLabels)):
-                        Full_Labels[SoC+i] = ccLabels[i]
+                        if not CFF and TokenizedCooStr[i:i+len(TKA)] == TKA:
+                            for j in range(len(ccLabels)):
+                                clabels[i+j] = ccLabels[j]
+                            CFF = True
+                All_Labels.append((clabels, StartOfCoords))
+            
+            for (ccLabels, SoC) in All_Labels:
+                for i in range(len(ccLabels)):
+                    Full_Labels[SoC+i] = ccLabels[i]
                             
                 # SplitPar
                 # Full_Labels
@@ -204,7 +204,6 @@ for mdl in Models:
                         RealCoordinate += 1
                 StrEnc = Tokenizer(SplitPar, return_tensors="pt").to(device)
                 Output = model(**StrEnc)
-
                 Logits = Output.logits[0][1:-1].sigmoid()
 
                 LabelsForPar = []

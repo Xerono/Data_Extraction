@@ -1,3 +1,4 @@
+# Different kind of coordinate generation
 Storage = False
 
 def create(Inputs):
@@ -99,7 +100,7 @@ def create(Inputs):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
-    Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
+    Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
     optim = AdamW(Model.parameters(), lr=Learning_Rate)
 
     # New in CT

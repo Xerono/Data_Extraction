@@ -40,7 +40,7 @@ import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PreTrainedModel = 'bert-base-cased'
 from transformers import BertTokenizerFast
-Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
+Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
 
 
 
@@ -52,11 +52,11 @@ All_Models = os.listdir(ModPath)
 Models = []
 from transformers import BertForTokenClassification
 for mdl in All_Models:
-    if "TC6" in mdl:
+    if "TC6_0" in mdl or "TC6_1" in mdl:
         Models.append(mdl)
 for mdl in Models:
     for Treshold in Tresholds:
-        Paras = mdl.split("_")[2]
+        Paras = mdl.split("_")[1]
 
         Cut_Par = bool(int(Paras[0]))
         CTN = bool(int(Paras[1]))

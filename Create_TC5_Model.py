@@ -84,246 +84,83 @@ def create(Inputs):
 
 
 
-
-
-    Symbols = ["•", "H", "V", "¢", ".", "j", "J", "°", ",", ";", "Њ", "Ј", "U",
-                   '"', "″", "'", "o", "@", "؇", "-", "¶", "(", ")", "Љ", "±",
-                   ":", "µ", "/",
-                   "8", "9"] # Found by trial & error
-
-
-
-    def generate_eight_coords(Detailed_Labels):
-        gradN = str(random.randint(0, 90))
-        minN = str(random.randint(0, 59))
-        sekN = str(random.randint(0, 59))
-        NS = random.choice(["N", "S"])
-        gradW = str(random.randint(0, 90))
-        minW = str(random.randint(0, 59))
-        sekW = str(random.randint(0, 59))
-        WE = random.choice(["W", "E"])
-        PotCoords = (gradN, minN, sekN, NS, gradW, minW, sekW, WE)
+    def get_cord_labels(Coord, SString):
+        TokenString = Tokenizer.tokenize(SString)
         Labels = []
-        Coords = []
-        if len(gradN) == 1:
-            Labels.append(1)
-            Coords.append(gradN)
-        else:
-            Labels.append(1)
-            Labels.append(1)
-            Coords.append(gradN[0])
-            Coords.append(gradN[1])
-
-            
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
+        PossibleLabels = []
+        for i in range(len(Coord)):
+            PossibleLabels.append(0)
         
-        if len(minN) == 1:
-            Labels.append(2)
-            Coords.append(minN)
-        else:
-            Labels.append(2)
-            Labels.append(2)
-            Coords.append(minN[0])
-            Coords.append(minN[1])
-
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-
-        if len(sekN) == 1:
-            Labels.append(3)
-            Coords.append(sekN)
-        else:
-            Labels.append(3)
-            Labels.append(3)
-            Coords.append(sekN[0])
-            Coords.append(sekN[1])
-
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        Coords.append(NS)
-        Labels.append(4)
-
-        
-        if len(gradW) == 1:
-            if Detailed_Labels:
-                Labels.append(7)
+        for i in range(len(TokenString)):
+            Labels.append(-1)
+        if Detailed_Labels:# Grad1, Min1, Sek1, Lat, Grad2, Min2, Sek2, Long, Noise, Irrelevant, Pad
+            if len(Coord) == 6:
+                PossibleLabels[0] = 0
+                PossibleLabels[1] = 1
+                PossibleLabels[2] = 3
+                PossibleLabels[3] = 4
+                PossibleLabels[4] = 5
+                PossibleLabels[5] = 7
             else:
-                Labels.append(1)
-            Coords.append(gradW)
-        else:
-            if Detailed_Labels:
-                Labels.append(7)
-                Labels.append(7)
+                PossibleLabels[0] = 0
+                PossibleLabels[1] = 1
+                PossibleLabels[2] = 2
+                PossibleLabels[3] = 3
+                PossibleLabels[4] = 4
+                PossibleLabels[5] = 5
+                PossibleLabels[6] = 6
+                PossibleLabels[7] = 7
+        else:# Grad, Min, Sek, Lat, Long, Noise, Irrelevant, Pad
+            if len(Coord) == 6:
+                PossibleLabels[0] = 0
+                PossibleLabels[1] = 1
+                PossibleLabels[2] = 3
+                PossibleLabels[3] = 0
+                PossibleLabels[4] = 1
+                PossibleLabels[5] = 4
             else:
-                Labels.append(1)
-                Labels.append(1)
-            Coords.append(gradW[0])
-            Coords.append(gradW[1])
+                PossibleLabels[0] = 0
+                PossibleLabels[1] = 1
+                PossibleLabels[2] = 2
+                PossibleLabels[3] = 3
+                PossibleLabels[4] = 0
+                PossibleLabels[5] = 1
+                PossibleLabels[6] = 2
+                PossibleLabels[7] = 4
+        for i in range(len(Coord)):
+            crd = Coord[i]
+            TokenCord = Tokenizer.tokenize(mc.split_string(crd))
+            TokenCord_Following = TokenCord.copy()
+            TokenCord_Following[0] = "##" + TokenCord_Following[0]
+            for j in range(len(TokenString)-len(TokenCord)+1):
+                if TokenString[j:j+len(TokenCord)] == TokenCord or TokenString[j:j+len(TokenCord)] == TokenCord_Following:
+                    for k in range(len(TokenCord)):
+                        if Labels[j+k] == -1:
+                            Labels[j+k] = PossibleLabels[i]
+        for i in range(len(Labels)):
+            if Labels[i] == -1: # "Not Labels[i]" => 0 = False
+                if Detailed_Labels:
+                    Labels[i] = 8 # Noise
+                else:
+                    Labels[i] = 5 # Noise
+        return (SString, Coord, Labels)
 
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        if len(minW) == 1:
-            if Detailed_Labels:
-                Labels.append(8)
-            else:
-                Labels.append(2)
-            Coords.append(minW)
-        else:
-            if Detailed_Labels:
-                Labels.append(8)
-                Labels.append(8)
-            else:
-                Labels.append(2)
-                Labels.append(2)
-            
-            Coords.append(minW[0])
-            Coords.append(minW[1])
-
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        if len(sekW) == 1:
-            if Detailed_Labels:
-                Labels.append(9)
-            else:
-                Labels.append(3)
-            Coords.append(sekW)
-        else:
-            if Detailed_Labels:
-                Labels.append(9)
-                Labels.append(9)
-            else:
-                Labels.append(3)
-                Labels.append(3)
-            Coords.append(sekW[0])
-            Coords.append(sekW[1])
-
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-            
-        Coords.append(WE)
-        Labels.append(5)
-        CoordsString = ""
-
-        for i in Coords:
-            CoordsString += i
-        return (CoordsString, PotCoords, Labels)
-
-    def generate_six_coords(Detailed_Labels):
-        gradN = str(random.randint(0, 90))
-        minN = str(random.randint(0, 59))
-        NS = random.choice(["N", "S"])
-        gradW = str(random.randint(0, 90))
-        minW = str(random.randint(0, 59))
-        WE = random.choice(["W", "E"])
-        PotCoords = (gradN, minN, NS, gradW, minW, WE)
-        Labels = []
-        Coords = []
-        if len(gradN) == 1:
-            Labels.append(1)
-            Coords.append(gradN)
-        else:
-            Labels.append(1)
-            Labels.append(1)
-            Coords.append(gradN[0])
-            Coords.append(gradN[1])
-
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        if len(minN) == 1:
-            Labels.append(2)
-            Coords.append(minN)
-        else:
-            Labels.append(2)
-            Labels.append(2)
-            Coords.append(minN[0])
-            Coords.append(minN[1])
-            
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        Coords.append(NS)
-        Labels.append(4)
-        
-        
-        if len(gradW) == 1:
-            if Detailed_Labels:
-                Labels.append(7)
-            else:
-                Labels.append(1)
-            Coords.append(gradW)
-        else:
-            if Detailed_Labels:
-                Labels.append(7)
-                Labels.append(7)
-            else:
-                Labels.append(1)
-                Labels.append(1)
-            Coords.append(gradW[0])
-            Coords.append(gradW[1])
-            
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        if len(minW) == 1:
-            if Detailed_Labels:
-                Labels.append(8)
-            else:
-                Labels.append(2)
-            Coords.append(minW)
-        else:
-            if Detailed_Labels:
-                Labels.append(8)
-                Labels.append(8)
-            else:
-                Labels.append(2)
-                Labels.append(2)
-            Coords.append(minW[0])
-            Coords.append(minW[1])
-            
-        for i in range(random.choice([1,2])):
-            Coords.append(random.choice(Symbols))
-            Labels.append(6)
-        
-        Coords.append(WE)
-        Labels.append(5)
-        CoordsString = ""
-        for i in Coords:
-            CoordsString += i
-        return (CoordsString, PotCoords, Labels)
-
-
-
-    def Replace(ParCord):
+    def get_par_labels(ParCord):
         (Par, ListOfCoords, Detailed_Labels) = ParCord
         FullNewCoords = []
         NewCoords = []
         for (Coord, String) in ListOfCoords:
-            if random.choice([6, 8]) == 6:
-                (CoordsString, PotCords, Labels) = generate_six_coords(Detailed_Labels)
-            else:
-                (CoordsString, PotCords, Labels) = generate_eight_coords(Detailed_Labels)
-            Par = Par.replace(String, CoordsString)
+            (CoordsString, PotCords, Labels) = get_cord_labels(Coord, mc.split_string(String))
             NewCoords.append(CoordsString)
             FullNewCoords.append((CoordsString, PotCords, Labels))
         FullLabels = []
         SplitPar = mc.split_string(Par)
         TokenizedSplitPar = Tokenizer.tokenize(SplitPar)
         for i in range(len(TokenizedSplitPar)):
-            FullLabels.append(0)
+            if Detailed_Labels:
+                FullLabels.append(9) # Irrelevant
+            else:
+                FullLabels.append(6) # Irrelevant
         for (CoordsString, PotCords, Labellist) in FullNewCoords:
             CoordsSplit = Tokenizer.tokenize(mc.split_string(CoordsString))
             for i in range(0, len(TokenizedSplitPar) - len(CoordsSplit) + 1):
@@ -384,7 +221,7 @@ def create(Inputs):
                     Current_Par = newpar[:-1]
 
 
-            (SP, Labels, NewCoords) = Replace((Current_Par, CordList, Detailed_Labels))
+            (SP, Labels, NewCoords) = get_par_labels((Current_Par, CordList, Detailed_Labels))
 
             if Coord_To_Noise:
                 if not Storage:
