@@ -22,14 +22,13 @@ def create(Inputs, Cust_Tok):
         Clarifier = "NT"    
     Basemodel = "bert-base-cased"
 
-    PadLength = 320
     DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
     Stoptime = 28800 # 8 hours
     Batch_Size_Train = 8
     Learning_Rate = 5e-5
     Custom_Loss = 0.1
     TestPercentage = 10
-
+    PadLength = 505
     Randomseed = "DasIstEinSeed"
 
     Parameters = {}
@@ -48,7 +47,8 @@ def create(Inputs, Cust_Tok):
     import pickle
     CurDir = os.getcwd()
     Database = CurDir + "/Files/TC6_TT_Training.pickle"
-    OriginalPars = pickle.load(Database)
+    with open(Database, "rb") as dbf:
+        OriginalPars = pickle.load(dbf)
 
     
     import random
@@ -62,7 +62,7 @@ def create(Inputs, Cust_Tok):
         (Six, Eight, NF, E) = mc.find_coordinates(Par)
         Found_Coords = Six + Eight
         Coords = []
-        if len(Found_Coords)>0 and len(Par)<MaxLength:
+        if len(Found_Coords)>0:
             for (PotCord, StringCord, Par) in Found_Coords:
                 Coords.append((PotCord, StringCord))
                 All_Coordinates.append((PotCord, StringCord))
@@ -104,9 +104,13 @@ def create(Inputs, Cust_Tok):
     else:
         Tokenizer = BertTokenizerFast.from_pretrained(Basemodel)
     optim = AdamW(Model.parameters(), lr=Learning_Rate)
+    PwCCopy = []
+    for (Par, CL) in PwC:
+        if len(Tokenizer.tokenize(Par))<PadLength:
+               PwCCopy.append((Par, CL))
+    PwC = PwCCopy
 
     # New in CT
-    
     for sym in Symbols:
         if Tokenizer.tokenize(sym) == ['[UNK]']:
             print("Error:")

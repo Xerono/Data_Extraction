@@ -64,9 +64,7 @@ for (Paras, Cust_Tok, Treshold) in ListOfRelevants:
 
 import Create_TC6_TT_Model as NewTC6Model
 for (Paras, Cust_Tok) in ListOfModels:
-    print("Starting:")
-    print(Paras)
-    print(Cust_Tok)
+    print("Starting: " + Paras + " " + str(Cust_Tok))
     NewTC6Model.create(Paras, Cust_Tok)
 
 print("Finished model creation")

@@ -8,11 +8,13 @@ def use(Inputs, Cust_Tok, Grenze, IsThisTrainingData):
     import pickle
     if IsThisTrainingData == "Training":
         Database = CurDir + "/Files/TC6_TT_Training.pickle"
-        OriginalPars = pickle.load(Database)
+        with open(Database, "rb") as dbf:
+            OriginalPars = pickle.load(dbf)
     else:
         if IsThisTraininData == "Test:
             Database = CurDir + "/Files/TC6_TT_Test.pickle"
-            OriginalPars = pickle.load(Database)
+            with open(Database, "rb") as dbf:
+                OriginalPars = pickle.load(dbf)
         else:
             Database = CurDir + "/Files/Database.db"
             Con = sqlite3.connect(Database)
