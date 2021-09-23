@@ -64,9 +64,12 @@ for (Paras, Cust_Tok, Treshold) in ListOfRelevants:
 
 import Create_TC6_TT_Model as NewTC6Model
 for (Paras, Cust_Tok) in ListOfModels:
-    NewTC6Model.create((Paras, Cust_Tok))
+    print("Starting:")
+    print(Paras)
+    print(Cust_Tok)
+    NewTC6Model.create(Paras, Cust_Tok)
 
-
+print("Finished model creation")
 TorT = ["Training", "Test", "All"]
 
 import Use_TC6_TT_Model as UseTC6Model
@@ -74,4 +77,4 @@ import Use_TC6_TT_Model as UseTC6Model
 
 for (Paras, Cust_Tok, Treshold) in ListOfRelevants:
     for Training in TorT:
-        UseTC6Model.use((Paras, Cust_Tok, Treshold, Training))
+        UseTC6Model.use(Paras, Cust_Tok, Treshold, Training)
