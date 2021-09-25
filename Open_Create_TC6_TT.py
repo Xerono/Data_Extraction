@@ -1,12 +1,16 @@
 ListOfRelevants = []
+
+ListOfRelevants.append(("0110", True, 0.95))
+ListOfRelevants.append(("1010", True, 0.95))
+
+
 ListOfRelevants.append(("0011", False, 0.99))
 ListOfRelevants.append(("0110", False, 0.99))
 ListOfRelevants.append(("1010", False, 0.99))
 ListOfRelevants.append(("0010", False, 0.99))
 ListOfRelevants.append(("0110", False, 0.95))
 
-ListOfRelevants.append(("0110", True, 0.95))
-ListOfRelevants.append(("1010", True, 0.95))
+
 
 
 

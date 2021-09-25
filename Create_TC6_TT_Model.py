@@ -23,7 +23,7 @@ def create(Inputs, Cust_Tok):
     Basemodel = "bert-base-cased"
 
     DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
-    Stoptime = 28800 # 8 hours
+    Stoptime = 3600 # 8 hours
     Batch_Size_Train = 8
     Learning_Rate = 5e-5
     Custom_Loss = 0.1
