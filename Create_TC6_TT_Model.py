@@ -413,7 +413,7 @@ def create(Inputs, Cust_Tok):
             PassedSeconds = time.time() - Checktime
             if PassedSeconds > 600:
                 print(Code + "_" + Clarifier + " with loss of " + str(round(lossnum, 6)) + " (" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
-                Chektime = time.time()
+                Checktime = time.time()
             Counter += 1
             eetime = time.time()
             Time_For_Batch.append(eetime-sstime)
