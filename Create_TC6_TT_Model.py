@@ -377,6 +377,7 @@ def create(Inputs, Cust_Tok):
     Time_For_Batch = []
     Starttime = time.time()
     PassedSeconds = 0
+    Checktime = time.time()
     while time.time() - Starttime < Stoptime:
         for batch in Training_Loader:
             sstime = time.time()
@@ -409,10 +410,10 @@ def create(Inputs, Cust_Tok):
             Loss_History.append(lossnum)
             Loss.backward()
             optim.step()
-            PassedSeconds += time.time() - Starttime
+            PassedSeconds = time.time() - Checktime
             if PassedSeconds > 600:
                 print(Code + "_" + Clarifier + " with loss of " + str(round(lossnum, 6)) + " (" + str(Counter) + " steps, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
-                PassedSeconds = 0
+                Chektime = time.time()
             Counter += 1
             eetime = time.time()
             Time_For_Batch.append(eetime-sstime)
