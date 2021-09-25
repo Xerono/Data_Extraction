@@ -28,7 +28,7 @@ def create(Inputs, Cust_Tok):
     Learning_Rate = 5e-5
     Custom_Loss = 0.1
     TestPercentage = 10
-    PadLength = 505
+    PadLength = 510
     Randomseed = "DasIstEinSeed"
 
     Parameters = {}

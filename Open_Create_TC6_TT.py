@@ -17,7 +17,7 @@ CurDir = os.getcwd()
 Database = CurDir + "/Files/Database.db"
 Con = sqlite3.connect(Database)
 Cur = Con.cursor()
-MaxLength = 500 # Tokens
+MaxLength = 480 # Tokens
 xs = "Select * FROM Pars"
 OriginalPars = Cur.execute(xs).fetchall()
 Con.close()
