@@ -11,7 +11,7 @@ def use(Inputs, Cust_Tok, Grenze, IsThisTrainingData):
         with open(Database, "rb") as dbf:
             OriginalPars = pickle.load(dbf)
     else:
-        if IsThisTraininData == "Test:
+        if IsThisTrainingData == "Test":
             Database = CurDir + "/Files/TC6_TT_Test.pickle"
             with open(Database, "rb") as dbf:
                 OriginalPars = pickle.load(dbf)
@@ -24,13 +24,14 @@ def use(Inputs, Cust_Tok, Grenze, IsThisTrainingData):
             Con.close()
 
     ResDatabase = CurDir + "/Results/Results.db"
-
+    Maxlength = 500
     if Cust_Tok:
         Clarifier = "CT"
     else:
         Clarifier = "NT"
     
     import Module_Coordinates as mc
+    import torch
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     PreTrainedModel = 'bert-base-cased'
     from transformers import BertTokenizerFast
@@ -52,7 +53,7 @@ def use(Inputs, Cust_Tok, Grenze, IsThisTrainingData):
                 CordsInThis.append((Coords, StringC))
             Dataset.append((Par, CordsInThis))
 
-    import torch
+    
 
 
 
@@ -110,7 +111,7 @@ def use(Inputs, Cust_Tok, Grenze, IsThisTrainingData):
             print(mdl + " - "  + str(Treshold) + " - " + str(Counter) + "/" + str(len(Dataset)) + " - " +  str(time.time() - Starttime))
         Counter += 1
         SplitPar = Par
-        if len(SplitPar)<Maxlength:
+        if len(Tokenizer.tokenize(SplitPar))<Maxlength:
             Full_Labels = []
             TokenizedPar = Tokenizer.tokenize(SplitPar)
             for i in range(len(TokenizedPar)):
