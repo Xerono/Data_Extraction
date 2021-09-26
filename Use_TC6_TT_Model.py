@@ -325,7 +325,7 @@ def use(Inputs, Cust_Tok, Grenze, IsThisTrainingData):
                 Precision FLOAT NOT NULL,
                 Recall FLOAT NOT NULL,
                 Fval FLOAT NOT NULL,
-                PRIMARY KEY(CutPar, CTN, Dele, DetLabels, , Tokenizertype, Treshold)
+                PRIMARY KEY(CutPar, CTN, Dele, DetLabels, Datatype, Tokenizertype, Treshold)
                 );"""
         Cur.execute(sql_command)
         Con.commit()
