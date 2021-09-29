@@ -30,7 +30,6 @@ for front in Fronts:
 
 import Create_TC6_Model as NewTC6Model
 ThisBatch = Batches[This_Batch]
-import subprocess
 for Paras in ThisBatch:
     NewTC6Model.create(tuple(Paras))
 
