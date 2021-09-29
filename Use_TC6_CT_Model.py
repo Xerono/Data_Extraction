@@ -45,7 +45,7 @@ Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/"
 
 NewData = []
 for (Par, CordsInThis) in Dataset:
-    if Tokenizer.tokenize(Par)<510:
+    if len(Tokenizer.tokenize(Par))<510:
         NewData.append((Par, CordsInThis))
 Dataset = NewData
 
