@@ -105,7 +105,7 @@ for k in Seen_Chanc.keys():
 CurDir = os.getcwd()
 if not os.path.isfile(CurDir + "/Files/TC7_Coords.pickle"):
     with open(CurDir + "/Files/TC7_Coords.pickle", "wb") as fff:
-        pickle.dump(op)
+        pickle.dump(op, fff)
 Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99)]
 
 import Create_TC7_Model as NewTC7Model
