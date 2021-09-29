@@ -430,9 +430,9 @@ def create(Inputs, Cust_Tok):
             os.mkdir(HistoryOutputPlace)
         if not os.path.isdir(ErrorOutputPlace):
             os.mkdir(ErrorOutputPlace)
-        with open(HistoryOutputPlace + Code + ".pickle", "wb") as file:
+        with open(HistoryOutputPlace + Clarifier + "_" + Code + ".pickle", "wb") as file:
             pickle.dump(Loss_History, file)
-        with open(ErrorOutputPlace + Code + ".pickle", "wb") as file:
+        with open(ErrorOutputPlace + Clarifier + "_" + Code + ".pickle", "wb") as file:
             pickle.dump(Strange_Happenings, file)
         Parameters["FullTime"] = FullTime
         Parameters["Pos_Weight_Vector"] = Pos_Weight_Vector
