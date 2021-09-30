@@ -26,7 +26,7 @@ def create(Inputs, Cust_Tok):
     import sqlite3
 
     CurDir = os.getcwd()
-    PadLength = 500
+    PadLength = 510
     DatasetLength = 10000 # Datasetlength / Batch size = Iterations per Epoch
     Stoptime = 28800 # 8 hours
     Batch_Size_Train = 8
