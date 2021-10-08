@@ -71,10 +71,10 @@ if not os.path.isfile(CurDir + "/Files/TCF_A_All.pickle"):
             ParCords.append((StringCord, PotCord))
         Data.append((Par, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
 else:
-    with open(CurDir + "/Files/TCF_A_All.pickle") as file:
-        Data = pickle.load(file)
-
-
+    with open(CurDir + "/Files/TCF_A_All.pickle", "rb") as file:
+        DataLoaded = pickle.load(file)
+        for (Par, Labels, (PC, PT, PS, PC2)) in DataLoaded:
+             Data.append((Par, (PC, PT, PS, PC2)))
 
 
 from transformers import BertTokenizerFast
@@ -128,9 +128,8 @@ for (Par, (ParCrops, ParTextures, ParSoils, ParCords)) in Data:
                 if TokenizedPar[i:i+len(TokenCord)] == TokenCord:
                     for j in range(len(TokenCord)):
                         Labels[i+j] = Coords_Class
-
         FittingData.append((Par, Labels, (ParCrops, ParTextures, ParSoils, ParCords)))
-
+print("Created Labels")
 Data_With_Things = []
 Data_Without_Things = []
 for (Par, Labels, (PC, PT, PS, PC2)) in FittingData:
@@ -165,32 +164,28 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
 optim = AdamW(Model.parameters(), lr=Learning_Rate)
 PadLength = 510
-DatasetLength = 10000
+DatasetLength = 10000 # 10000
 class Dataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         random.shuffle(TrainingData)
-        Par, Labels, (ParCrops, ParTextures, ParSoils, ParCords) = TrainingData[0]
+        Par, Labels_DS, (ParCrops, ParTextures, ParSoils, ParCords) = TrainingData[0]
         TokenizedPar_WithCLSandSEP = Tokenizer(Par)
         TokenizedPar = TokenizedPar_WithCLSandSEP['input_ids'][1:-1]
         Attention_Mask = []
-        for i in range(len(Labels)):
-            if Labels[i] == No_Class and random.choice([1,2,3,4]) == 1:
+        for i in range(len(Labels_DS)):
+            if Labels_DS[i] == No_Class and random.choice([1,2,3,4]) == 1:
                     Attention_Mask.append(0)
             else:
                 Attention_Mask.append(1)
         for i in range(PadLength - len(TokenizedPar)):
             TokenizedPar.append(0)
-        for i in range(PadLength - len(Labels)):
-            Labels.append(No_Class)
+            Labels_DS.append(No_Class)
             Attention_Mask.append(0)
 
         item = {}
         item['input_ids'] = torch.tensor(TokenizedPar)
-        item['labels'] = torch.tensor(Labels)
+        item['labels'] = torch.tensor(Labels_DS)
         item['attention_mask'] = torch.tensor(Attention_Mask)
-        if len(TokenizedPar) != len(Labels) or len(Labels) != len(Attention_Mask):
-            item = Dataset.__getitem__(1,1)
-            print("Error with data creation, getting another paragraph")
         return item
     def __len__(self):
         return DatasetLength
@@ -205,7 +200,7 @@ Loss_History = []
 Counter = 0
 Time_For_Batch = []
 Custom_Loss = 0
-Stoptime = 600
+Stoptime = 60 # 28800
 Starttime = time.time()
 
 while time.time()-Starttime < Stoptime:
@@ -228,6 +223,7 @@ while time.time()-Starttime < Stoptime:
         Batchendtime = time.time()
         Time_For_Batch.append(Batchendtime - Batchstarttime)
 Endtime = time.time()
+print("Finished Model")
 Fulltime = Endtime - Starttime
 ModName = "Alpha"
 Model.eval()
@@ -261,8 +257,9 @@ Daten = [(FittingData, "All"), (TrainingData, "Train"), (TestData, "Test")]
 
 ResDatabase = CurDir + "/Results/Results.db"
 
-for (Data, DescriptorData) in Daten:
+for (Dater, DescriptorData) in Daten:
     for Treshold in Tresholds:
+        print("Starting " + DescriptorData + " with treshold " + str(Treshold))
         Starttime = time.time()
         Full_Correct_Relevant_Labels = 0
         Full_Correct_Labels = 0
@@ -277,15 +274,18 @@ for (Data, DescriptorData) in Daten:
         for i in range(num_labels):
             OneLabels[i] = 0
             RealOneLabels[i] = 0
-        for Par, Labels, (ParCrops, ParTextures, ParSoils, ParCords) in Data:
+        for Par_Aus, Labels_Aus, (ParCrops, ParTextures, ParSoils, ParCords) in Dater:
+            print(Par)
+            print(len(Tokenizer.tokenize(Par)))
+            print(len(Labels))
             Calc_Labels_Par = []
-            All_Labels += len(Labels)
-            All_Classes += num_labels*len(Labels)
-            TokenizedPar = Tokenizer.tokenize(Par)
+            All_Labels += len(Labels_Aus)
+            All_Classes += num_labels*len(Labels_Aus)
+            TokenizedPar = Tokenizer.tokenize(Par_Aus)
             StrEnc = Tokenizer(Par, return_tensors="pt").to(device)
             Output = Model(**StrEnc)
             Logits = Output.logits[0][1:-1].sigmoid()
-            for i in range(len(Labels)):
+            for i in range(len(Labels_Aus)):
                 for j in range(num_labels):
                     if Labels[i][j] == float(1):
                         RealOneLabels[j] += 1
@@ -299,16 +299,16 @@ for (Data, DescriptorData) in Daten:
                     else:
                         Calc_Label.append(float(0))
                 Calc_Labels_Par.append(Calc_Label)
-            for i in range(len(Labels)):
-                if Calc_Labels_Par[i] == Labels[i]:
+            for i in range(len(Labels_Aus)):
+                if Calc_Labels_Par[i] == Labels_Aus[i]:
                     Full_Correct_Labels += 1
-                if float(1) in Labels[i]:
-                    if Calc_Labels_Par[i] == Labels[i]:
+                if float(1) in Labels_Aus[i]:
+                    if Calc_Labels_Par[i] == Labels_Aus[i]:
                         Full_Correct_Relevant_Labels += 1
                     else:
                         Not_Full_Correct_Relevants += 1
                 for j in range(num_labels):
-                    if Calc_Labels_Par[i][j] == Labels[i][j]:
+                    if Calc_Labels_Par[i][j] == Labels_Aus[i][j]:
                         Correct_Classes += 1
                     else:
                         False_Classes += 1
