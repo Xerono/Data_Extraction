@@ -281,7 +281,7 @@ def use(Inputs, Cust_Tok, Grenze):
     # Irrelevant, Noise, Coord, Grad1, Min1, Sek1, Lat, Long, Grad2, Min2, Sek2
     if res[0][0] == 0:
         sql_command = """
-                CREATE TABLE TC6_TT (
+                CREATE TABLE TC7 (
                 CutPar INTEGER NOT NULL,
                 CTN INTEGER NOT NULL,
                 Dele INTEGER NOT NULL,

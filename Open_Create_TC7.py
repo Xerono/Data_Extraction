@@ -111,7 +111,9 @@ Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0
 import Create_TC7_Model as NewTC7Model
 import Use_TC7_Model as UseTC7Model
 for Paras in ThisBatch:
+    print(Paras)
+    input()
     for cust_Tok in [True, False]:
         NewTC7Model.create(tuple(Paras), cust_Tok)
         for trsh in Tresholds:
-            UseTC7Model.use(tuple(Paras), cust_Tok, trsh)
+            UseTC7Model.use(Paras, cust_Tok, trsh)
