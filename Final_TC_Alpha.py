@@ -32,42 +32,47 @@ Con.close()
 import Module_Coordinates as mc
 # Target: Par, ListOfSoilsInPar, ListOfTexturesInPar, ListOfCropsInPar, ListOfCoordsInPar
 Data = []
-for Count, (ID, Filename, Par) in enumerate(OriginalPars):
-    if Count%10000==0:
-        print(str(Count) + "/" + str(len(OriginalPars)))
-    
-    ParCrops = []
-    ParTexts = []
-    ParSoils = []
-    ParCords = []
-    for crop in Cropslist:
-        crop1 = " " + crop + " "
-        crop2 = "(" + crop + " "
-        crop3 = " " + crop + ")"
-        crop4 = "(" + crop + " "
-        crop5 = " " + crop + ","
-        edcrops = [crop1, crop2, crop3, crop4, crop5]
-        for cropp in edcrops:
-            if cropp in Par:
-                ParCrops.append(crop)
-    for text in Texturelist:
-        text1 = " " + text + " "
-        text2 = "(" + text + " "
-        text3 = " " + text + ")"
-        text4 = "(" + text + " "
-        text5 = " " + text + ","
-        edtext = [text1, text2, text3, text4, text5]
-        for textt in edtext:
-            if textt in Par:
-                ParTexts.append(text)
-    for soil in Soillist:
-        if soil in Par:
-            ParSoils.append(soil)
-    (Six, Eight, NF, E) = mc.find_coordinates(Par)
-    Found_Coords = Six + Eight    
-    for (PotCord, StringCord, Par) in Found_Coords:
-        ParCords.append((StringCord, PotCord))
-    Data.append((Par, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
+import pickle
+if not os.path.isfile(CurDir + "/Files/TCF_A_All.pickle"):
+    for Count, (ID, Filename, Par) in enumerate(OriginalPars):
+        if Count%10000==0:
+            print(str(Count) + "/" + str(len(OriginalPars)))
+        
+        ParCrops = []
+        ParTexts = []
+        ParSoils = []
+        ParCords = []
+        for crop in Cropslist:
+            crop1 = " " + crop + " "
+            crop2 = "(" + crop + " "
+            crop3 = " " + crop + ")"
+            crop4 = "(" + crop + " "
+            crop5 = " " + crop + ","
+            edcrops = [crop1, crop2, crop3, crop4, crop5]
+            for cropp in edcrops:
+                if cropp in Par:
+                    ParCrops.append(crop)
+        for text in Texturelist:
+            text1 = " " + text + " "
+            text2 = "(" + text + " "
+            text3 = " " + text + ")"
+            text4 = "(" + text + " "
+            text5 = " " + text + ","
+            edtext = [text1, text2, text3, text4, text5]
+            for textt in edtext:
+                if textt in Par:
+                    ParTexts.append(text)
+        for soil in Soillist:
+            if soil in Par:
+                ParSoils.append(soil)
+        (Six, Eight, NF, E) = mc.find_coordinates(Par)
+        Found_Coords = Six + Eight    
+        for (PotCord, StringCord, Par) in Found_Coords:
+            ParCords.append((StringCord, PotCord))
+        Data.append((Par, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
+else:
+    with open(CurDir + "/Files/TCF_A_All.pickle") as file:
+        Data = pickle.load(file)
 
 
 
@@ -142,7 +147,7 @@ import random
 random.seed(Randomseed)
 TrainingData = Data_With_Things[:LenTraining]
 TestData = Data_With_Things[LenTraining:]
-import pickle
+
 with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
     pickle.dump(TrainingData, file)
 with open(CurDir + "/Files/TCF_A_Test.pickle", "wb") as file:
@@ -173,8 +178,9 @@ class Dataset(torch.utils.data.Dataset):
                     Attention_Mask.append(0)
             else:
                 Attention_Mask.append(1)
-        for i in range(PadLength - len(Labels)):
+        for i in range(PadLength - len(TokenizedPar)):
             TokenizedPar.append(0)
+        for i in range(PadLength - len(Labels)):
             Labels.append(No_Class)
             Attention_Mask.append(0)
 
@@ -182,6 +188,9 @@ class Dataset(torch.utils.data.Dataset):
         item['input_ids'] = torch.tensor(TokenizedPar)
         item['labels'] = torch.tensor(Labels)
         item['attention_mask'] = torch.tensor(Attention_Mask)
+        if len(TokenizedPar) != len(Labels) or len(Labels) != len(Attention_Mask):
+            item = Dataset.__getitem__(1,1)
+            print("Error with data creation, getting another paragraph")
         return item
     def __len__(self):
         return DatasetLength
