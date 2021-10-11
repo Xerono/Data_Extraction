@@ -32,50 +32,42 @@ Con.close()
 import Module_Coordinates as mc
 # Target: Par, ListOfSoilsInPar, ListOfTexturesInPar, ListOfCropsInPar, ListOfCoordsInPar
 Data = []
-import pickle
-if not os.path.isfile(CurDir + "/Files/TCF_A_All.pickle"):
-    for Count, (ID, Filename, Par) in enumerate(OriginalPars):
-        if Count%10000==0:
-            print(str(Count) + "/" + str(len(OriginalPars)))
-        
-        ParCrops = []
-        ParTexts = []
-        ParSoils = []
-        ParCords = []
-        for crop in Cropslist:
-            crop1 = " " + crop + " "
-            crop2 = "(" + crop + " "
-            crop3 = " " + crop + ")"
-            crop4 = "(" + crop + " "
-            crop5 = " " + crop + ","
-            edcrops = [crop1, crop2, crop3, crop4, crop5]
-            for cropp in edcrops:
-                if cropp in Par:
-                    ParCrops.append(crop)
-        for text in Texturelist:
-            text1 = " " + text + " "
-            text2 = "(" + text + " "
-            text3 = " " + text + ")"
-            text4 = "(" + text + " "
-            text5 = " " + text + ","
-            edtext = [text1, text2, text3, text4, text5]
-            for textt in edtext:
-                if textt in Par:
-                    ParTexts.append(text)
-        for soil in Soillist:
-            if soil in Par:
-                ParSoils.append(soil)
-        (Six, Eight, NF, E) = mc.find_coordinates(Par)
-        Found_Coords = Six + Eight    
-        for (PotCord, StringCord, Par) in Found_Coords:
-            ParCords.append((StringCord, PotCord))
-        Data.append((Par, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
-else:
-    with open(CurDir + "/Files/TCF_A_All.pickle", "rb") as file:
-        DataLoaded = pickle.load(file)
-        for (Par, Labels, (PC, PT, PS, PC2)) in DataLoaded:
-             Data.append((Par, (PC, PT, PS, PC2)))
-
+for Count, (ID, Filename, Par) in enumerate(OriginalPars):
+    if Count%10000==0:
+        print(str(Count) + "/" + str(len(OriginalPars)))
+    
+    ParCrops = []
+    ParTexts = []
+    ParSoils = []
+    ParCords = []
+    for crop in Cropslist:
+        crop1 = " " + crop + " "
+        crop2 = "(" + crop + " "
+        crop3 = " " + crop + ")"
+        crop4 = "(" + crop + " "
+        crop5 = " " + crop + ","
+        edcrops = [crop1, crop2, crop3, crop4, crop5]
+        for cropp in edcrops:
+            if cropp in Par:
+                ParCrops.append(crop)
+    for text in Texturelist:
+        text1 = " " + text + " "
+        text2 = "(" + text + " "
+        text3 = " " + text + ")"
+        text4 = "(" + text + " "
+        text5 = " " + text + ","
+        edtext = [text1, text2, text3, text4, text5]
+        for textt in edtext:
+            if textt in Par:
+                ParTexts.append(text)
+    for soil in Soillist:
+        if soil in Par:
+            ParSoils.append(soil)
+    (Six, Eight, NF, E) = mc.find_coordinates(Par)
+    Found_Coords = Six + Eight    
+    for (PotCord, StringCord, Par) in Found_Coords:
+        ParCords.append((StringCord, PotCord))
+    Data.append((Par, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
 
 from transformers import BertTokenizerFast
 
@@ -146,7 +138,7 @@ import random
 random.seed(Randomseed)
 TrainingData = Data_With_Things[:LenTraining]
 TestData = Data_With_Things[LenTraining:]
-
+import pickle
 with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
     pickle.dump(TrainingData, file)
 with open(CurDir + "/Files/TCF_A_Test.pickle", "wb") as file:
@@ -168,8 +160,9 @@ DatasetLength = 10000 # 10000
 class Dataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         random.shuffle(TrainingData)
-        Par, Labels_DS, (ParCrops, ParTextures, ParSoils, ParCords) = TrainingData[0]
-        TokenizedPar_WithCLSandSEP = Tokenizer(Par)
+        Par_DS, Labels_DS, (ParCrops, ParTextures, ParSoils, ParCords) = TrainingData[0]
+        Labels_DS = Labels_DS.copy()
+        TokenizedPar_WithCLSandSEP = Tokenizer(Par_DS)
         TokenizedPar = TokenizedPar_WithCLSandSEP['input_ids'][1:-1]
         Attention_Mask = []
         for i in range(len(Labels_DS)):
@@ -177,11 +170,11 @@ class Dataset(torch.utils.data.Dataset):
                     Attention_Mask.append(0)
             else:
                 Attention_Mask.append(1)
+
         for i in range(PadLength - len(TokenizedPar)):
             TokenizedPar.append(0)
             Labels_DS.append(No_Class)
             Attention_Mask.append(0)
-
         item = {}
         item['input_ids'] = torch.tensor(TokenizedPar)
         item['labels'] = torch.tensor(Labels_DS)
@@ -200,7 +193,7 @@ Loss_History = []
 Counter = 0
 Time_For_Batch = []
 Custom_Loss = 0
-Stoptime = 60 # 28800
+Stoptime = 28800 # 28800
 Starttime = time.time()
 
 while time.time()-Starttime < Stoptime:
@@ -231,7 +224,7 @@ Model.save_pretrained(CurDir + "/Models/" + ModName)
 HistoryOutputPlace = CurDir + "/Results/TCF_Loss/"
 if not os.path.isdir(HistoryOutputPlace):
     os.mkdir(HistoryOutputPlace)
-with open(HistoryOutputPlace + "Alpha_.pickle", "wb") as file:
+with open(HistoryOutputPlace + "Alpha.pickle", "wb") as file:
     pickle.dump(Loss_History, file)
 Parameters = {}
 Parameters["FullTime"] = Fulltime
@@ -252,7 +245,7 @@ with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as fi
 print("Model " + ModName + " saved.")
 
 Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99), float(0.999), float(0.9999), float(0.99999), float(0.999999)]
-Daten = [(FittingData, "All"), (TrainingData, "Train"), (TestData, "Test")]
+Daten = [(TrainingData, "Train"), (TestData, "Test"), (FittingData, "All")]
 
 
 ResDatabase = CurDir + "/Results/Results.db"
@@ -274,22 +267,23 @@ for (Dater, DescriptorData) in Daten:
         for i in range(num_labels):
             OneLabels[i] = 0
             RealOneLabels[i] = 0
-        for Par_Aus, Labels_Aus, (ParCrops, ParTextures, ParSoils, ParCords) in Dater:
-            print(Par)
-            print(len(Tokenizer.tokenize(Par)))
-            print(len(Labels))
+        for CountAna, (Par_Aus, Labels_Aus, (ParCrops, ParTextures, ParSoils, ParCords)) in enumerate(Dater):
+            if CountAna%1000==0:
+                print(str(CountAna) + "/" + str(len(Dater)))
+            Labels_Aus = Labels_Aus.copy()
+            Par_Aus = str(Par_Aus)
             Calc_Labels_Par = []
             All_Labels += len(Labels_Aus)
             All_Classes += num_labels*len(Labels_Aus)
             TokenizedPar = Tokenizer.tokenize(Par_Aus)
-            StrEnc = Tokenizer(Par, return_tensors="pt").to(device)
+            StrEnc = Tokenizer(Par_Aus, return_tensors="pt").to(device)
             Output = Model(**StrEnc)
             Logits = Output.logits[0][1:-1].sigmoid()
             for i in range(len(Labels_Aus)):
                 for j in range(num_labels):
-                    if Labels[i][j] == float(1):
+                    if Labels_Aus[i][j] == float(1):
                         RealOneLabels[j] += 1
-            for i in range(len(Labels)):
+            for i in range(len(Labels_Aus)):
                 Current_Token = TokenizedPar[i]
                 Current_Logits = Logits[i]
                 Calc_Label = []
@@ -314,7 +308,7 @@ for (Dater, DescriptorData) in Daten:
                         False_Classes += 1
                     if Calc_Labels_Par[i][j] == float(1):
                         OneLabels[j] += 1
-                    if Labels[i][j] == float(1):
+                    if Labels_Aus[i][j] == float(1):
                         if Calc_Labels_Par[i][j] == float(1):
                             False_Positive_Classes += 1
         Endtime = time.time()
@@ -336,7 +330,7 @@ for (Dater, DescriptorData) in Daten:
             FVal = (2*Precision_Classes * Recall_Classes)/(Precision_Classes + Recall_Classes)
         else:
             FVal = 0
-        results_List = [(ModName, Treshold, DescriptorData,
+        results_list = [(ModName, Treshold, DescriptorData,
                          FullTime, All_Labels, Full_Correct_Labels, Full_Correct_Relevant_Labels, Not_Full_Correct_Relevants,
                          All_Classes, Correct_Classes, False_Classes,
                          OneLabels[0], OneLabels[1], OneLabels[2], OneLabels[3], RealOneLabels[0], RealOneLabels[1], RealOneLabels[2], RealOneLabels[3],
@@ -347,6 +341,7 @@ for (Dater, DescriptorData) in Daten:
         sql_command = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='TCF'"
         res = Cur.execute(sql_command).fetchall()
         if res[0][0] == 0:
+            print("Creating table")
             sql = """
                 CREATE TABLE TCF (
                 Name String NOT NULL,
@@ -378,7 +373,7 @@ for (Dater, DescriptorData) in Daten:
                 FVal FLOAT NOT NULL,
                 PRIMARY KEY(Name, Treshold, Datatype)
                 );"""
-            Cur.execute(sql_command)
+            Cur.execute(sql)
             Con.commit()
         sql = "INSERT INTO TCF VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         Cur.executemany(sql, results_list)
