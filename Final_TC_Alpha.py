@@ -30,54 +30,9 @@ Con.close()
 
 # ID, Filename, Par
 import Module_Coordinates as mc
-# Target: Par, ListOfSoilsInPar, ListOfTexturesInPar, ListOfCropsInPar, ListOfCoordsInPar
-Data = []
-for Count, (ID, Filename, Par) in enumerate(OriginalPars):
-    if Count%10000==0:
-        print(str(Count) + "/" + str(len(OriginalPars)))
-    
-    ParCrops = []
-    ParTexts = []
-    ParSoils = []
-    ParCords = []
-    for crop in Cropslist:
-        crop1 = " " + crop + " "
-        crop2 = "(" + crop + " "
-        crop3 = " " + crop + ")"
-        crop4 = "(" + crop + " "
-        crop5 = " " + crop + ","
-        edcrops = [crop1, crop2, crop3, crop4, crop5]
-        for cropp in edcrops:
-            if cropp in Par:
-                ParCrops.append(crop)
-    for text in Texturelist:
-        text1 = " " + text + " "
-        text2 = "(" + text + " "
-        text3 = " " + text + ")"
-        text4 = "(" + text + " "
-        text5 = " " + text + ","
-        edtext = [text1, text2, text3, text4, text5]
-        for textt in edtext:
-            if textt in Par:
-                ParTexts.append(text)
-    for soil in Soillist:
-        if soil in Par:
-            ParSoils.append(soil)
-    (Six, Eight, NF, E) = mc.find_coordinates(Par)
-    Found_Coords = Six + Eight    
-    for (PotCord, StringCord, Par) in Found_Coords:
-        ParCords.append((StringCord, PotCord))
-    Data.append((Par, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
-
 from transformers import BertTokenizerFast
-
-
-
 num_labels = 4 # Crop, Soil, Texture, Coordinate
 Basemodel = "bert-base-cased"
-
-Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
-
 No_Class = [float(0), float(0), float(0), float(0)]
 Crops_Class = No_Class.copy()
 Crops_Class[0] = float(1)
@@ -87,40 +42,50 @@ Soils_Class = No_Class.copy()
 Soils_Class[2] = float(1)
 Coords_Class = No_Class.copy()
 Coords_Class[3] = float(1)
-
-
+Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
 FittingData = []
-for (Par, (ParCrops, ParTextures, ParSoils, ParCords)) in Data:
+for Count, (ID, Filename, Par) in enumerate(OriginalPars):
     TokenizedPar = Tokenizer.tokenize(Par)
     if len(TokenizedPar) < 490:
         Labels = []
+        ParCrops = []
+        ParTexts = []
+        ParSoils = []
+        ParCords = []
         for Token in TokenizedPar:
             Labels.append(No_Class)
-        for crop in ParCrops:
+        for crop in Cropslist:
             TokenCrop = Tokenizer.tokenize(crop)
             for i in range(len(TokenizedPar)-len(TokenCrop)):
                 if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
                     for j in range(len(TokenCrop)):
                         Labels[i+j] = Crops_Class
-        for texture in ParTextures:
+                    ParCrops.append(crop)
+        for texture in Texturelist:
             TokenTexture = Tokenizer.tokenize(texture)
             for i in range(len(TokenizedPar)-len(TokenTexture)):
                 if TokenizedPar[i:i+len(TokenTexture)] == TokenTexture:
                     for j in range(len(TokenTexture)):
                         Labels[i+j] = Texture_Class
-        for soil in ParSoils:
+                    ParTexts.append(texture)
+        for soil in Soillist:
             TokenSoil = Tokenizer.tokenize(soil)
             for i in range(len(TokenizedPar)-len(TokenSoil)):
                 if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
                     for j in range(len(TokenSoil)):
                         Labels[i+j] = Soils_Class
-        for (cord, Extract_Cord) in ParCords:
-            TokenCord = Tokenizer.tokenize(cord)
+                ParSoils.append(soil)
+        (Six, Eight, NF, E) = mc.find_coordinates(Par)
+        Found_Coords = Six + Eight    
+        for (PotCord, StringCord, Par) in Found_Coords:
+            TokenCord = Tokenizer.tokenize(StringCord)
             for i in range(len(TokenizedPar)-len(TokenCord)):
                 if TokenizedPar[i:i+len(TokenCord)] == TokenCord:
                     for j in range(len(TokenCord)):
                         Labels[i+j] = Coords_Class
-        FittingData.append((Par, Labels, (ParCrops, ParTextures, ParSoils, ParCords)))
+            ParCords.append((StringCord, PotCord))
+        FittingData.append((Par, Labels, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
+
 print("Created Labels")
 Data_With_Things = []
 Data_Without_Things = []
@@ -254,35 +219,34 @@ for (Dater, DescriptorData) in Daten:
     for Treshold in Tresholds:
         print("Starting " + DescriptorData + " with treshold " + str(Treshold))
         Starttime = time.time()
-        Full_Correct_Relevant_Labels = 0
-        Full_Correct_Labels = 0
-        False_Positive_Classes = 0
-        Correct_Classes = 0
-        False_Classes = 0
-        All_Classes = 0
-        All_Labels = 0
-        Not_Full_Correct_Relevants = 0
-        OneLabels = {}
-        RealOneLabels = {}
+        Classes_C1_R1 = {}
+        CLasses_C0_R1 = {}
+        Classes_C1_R0 = {}
+        Classes_C0_R0 = {}
+        Num_Of_All_Tokens = 0
+        Num_Of_All_Relevant_Tokens = 0
+        Correct_Labels = 0
+        Correct_Relevant_Labels = 0
+        Num_Of_Labels_With_n_Ones = {}
+        Real_Ones = {}
         for i in range(num_labels):
-            OneLabels[i] = 0
-            RealOneLabels[i] = 0
+            Classes_C1_R1[i] = 0
+            Classes_C0_R1[i] = 0
+            Classes_C1_R0[i] = 0
+            Classes_C0_R0[i] = 0
+            Real_Ones[i] = 0
+            Num_Of_Labels_With_n_Ones[i] = 0
+        Num_Of_Labels_With_n_Ones[4] = 0
         for CountAna, (Par_Aus, Labels_Aus, (ParCrops, ParTextures, ParSoils, ParCords)) in enumerate(Dater):
             if CountAna%1000==0:
                 print(str(CountAna) + "/" + str(len(Dater)))
             Labels_Aus = Labels_Aus.copy()
             Par_Aus = str(Par_Aus)
             Calc_Labels_Par = []
-            All_Labels += len(Labels_Aus)
-            All_Classes += num_labels*len(Labels_Aus)
             TokenizedPar = Tokenizer.tokenize(Par_Aus)
             StrEnc = Tokenizer(Par_Aus, return_tensors="pt").to(device)
             Output = Model(**StrEnc)
             Logits = Output.logits[0][1:-1].sigmoid()
-            for i in range(len(Labels_Aus)):
-                for j in range(num_labels):
-                    if Labels_Aus[i][j] == float(1):
-                        RealOneLabels[j] += 1
             for i in range(len(Labels_Aus)):
                 Current_Token = TokenizedPar[i]
                 Current_Logits = Logits[i]
@@ -293,48 +257,69 @@ for (Dater, DescriptorData) in Daten:
                     else:
                         Calc_Label.append(float(0))
                 Calc_Labels_Par.append(Calc_Label)
+            # Labels_Aus
+            # Calc_Labels_Par
+            # TokenizedPar
+            Num_Of_All_Tokens += len(Labels_Aus)
             for i in range(len(Labels_Aus)):
-                if Calc_Labels_Par[i] == Labels_Aus[i]:
-                    Full_Correct_Labels += 1
-                if float(1) in Labels_Aus[i]:
-                    if Calc_Labels_Par[i] == Labels_Aus[i]:
-                        Full_Correct_Relevant_Labels += 1
-                    else:
-                        Not_Full_Correct_Relevants += 1
+                Num_Of_Labels_With_n_Ones[Calc_Labels_Par[i].count(float(1))] += 1
                 for j in range(num_labels):
-                    if Calc_Labels_Par[i][j] == Labels_Aus[i][j]:
-                        Correct_Classes += 1
-                    else:
-                        False_Classes += 1
-                    if Calc_Labels_Par[i][j] == float(1):
-                        OneLabels[j] += 1
                     if Labels_Aus[i][j] == float(1):
-                        if Calc_Labels_Par[i][j] == float(1):
-                            False_Positive_Classes += 1
+                        Real_Ones[j] += 1
+                if float(1) in Labels_Aus[i]:
+                    Num_Of_All_Relevant_Tokens += 1
+                    if Labels_Aus[i] == Calc_Labels_Par[i]:
+                        Correct_Relevant_Labels += 1
+                for j in range(num_labels): # Crops, Texture, Soil, Coordinate
+                    if Labels_Aus[i][j] == float(0):
+                        if Calc_Labels_Par[i][j] == float(0):
+                            Classes_C0_R0[j] += 1 # True Negative
+                        else:
+                            Classes_C1_R0[j] += 1 # False Positive
+                    else:
+                        if Calc_Labels_Par[i][j] == float(0):
+                            Classes_C0_R1[j] += 1 # False Negative
+                        else:
+                            Classes_C1_R1[j] += 1 # True Positive
+                
+                if Labels_Aus[i] == Calc_Labels_Par[i]:
+                    Correct_Labels += 1
+            
+            
         Endtime = time.time()
         FullTime = Endtime - Starttime
-        KKR = Full_Correct_Labels/All_Labels
-        KKR_Crops = OneLabels[0]/RealOneLabels[0]
-        KKR_Text = OneLabels[1]/RealOneLabels[1]
-        KKR_Soil = OneLabels[2]/RealOneLabels[2]
-        KKR_Coord = OneLabels[3]/RealOneLabels[3]
-        if Correct_Classes + False_Positive_Classes != 0:
-            Precision_Classes = Correct_Classes/(Correct_Classes + False_Positive_Classes)
-        else:
-            Precision_Classes = 0
-        if Correct_Classes + False_Classes != 0:
-            Recall_Classes = Correct_Classes/(Correct_Classes + False_Classes)
-        else:
-            Recall_Classes = 0
-        if Precision_Classes + Recall_Classes != 0:
-            FVal = (2*Precision_Classes * Recall_Classes)/(Precision_Classes + Recall_Classes)
-        else:
-            FVal = 0
-        results_list = [(ModName, Treshold, DescriptorData,
-                         FullTime, All_Labels, Full_Correct_Labels, Full_Correct_Relevant_Labels, Not_Full_Correct_Relevants,
-                         All_Classes, Correct_Classes, False_Classes,
-                         OneLabels[0], OneLabels[1], OneLabels[2], OneLabels[3], RealOneLabels[0], RealOneLabels[1], RealOneLabels[2], RealOneLabels[3],
-                         KKR_Crops, KKR_Text, KKR_Soil, KKR_Coord, KKR, Precision_Classes, Recall_Classes, FVal)]
+        Precision = {}
+        Recall = {}
+        FVal = {}
+        Mean_FVal = 0
+        for i in range(num_labels):
+            if Classes_C1_R1[i]+Classes_C1_R0[i] != 0:
+                Precision[i] = Classes_C1_R1[i]/(Classes_C1_R1[i]+Classes_C1_R0[i])
+            else:
+                Precision[i] = 0
+            if Classes_C1_R1[i]+Classes_C0_R1[i] != 0:
+                Recall[i] = Classes_C1_R1[i]/(Classes_C1_R1[i]+Classes_C0_R1[i])
+            else:
+                Recall[i] = 0
+            if Precision[i] + Recall[i] != 0:
+                FVal[i] = (2*Precision[i]*Recall[i])/(Precision[i]+Recall[i])
+            else:
+                FVal[i] = 0
+            Mean_FVal += FVal[i]
+        Mean_FVal = Mean_FVal/num_labels
+        
+        results_list = [(ModName, Treshold, DescriptorData, FullTime,
+                         Num_Of_All_Tokens, Correct_Labels, Num_Of_All_Relevant_Tokens, Correct_Relevant_Labels, #8
+                         Real_Ones[0], Classes_C1_R1[0], Classes_C0_R0[0], Classes_C0_R1[0], Classes_C1_R0[0], 
+                         Real_Ones[1], Classes_C1_R1[1], Classes_C0_R0[1], Classes_C0_R1[1], Classes_C1_R0[1],
+                         Real_Ones[2], Classes_C1_R1[2], Classes_C0_R0[2], Classes_C0_R1[2], Classes_C1_R0[2], 
+                         Real_Ones[3], Classes_C1_R1[3], Classes_C0_R0[3], Classes_C0_R1[3], Classes_C1_R0[3], # 20
+                         Precision[0], Recall[0], FVal[0],
+                         Precision[1], Recall[1], FVal[1],
+                         Precision[2], Recall[2], FVal[2],
+                         Precision[3], Recall[3], FVal[3], # 12
+                         Mean_FVal # 1
+                         )]
         
         Con = sqlite3.connect(ResDatabase)
         Cur = Con.cursor()
@@ -348,34 +333,48 @@ for (Dater, DescriptorData) in Daten:
                 Treshold FLOAT NOT NULL,
                 Datatype String NOT NULL,
                 Time FLOAT NOT NULL,
-                Number_of_Tokens INTEGER NOT NULL,
-                Num_of_full_correct_labels INTEGER NOT NULL,
-                Num_of_full_correct_relevant_labels INTEGER NOT NULL,
-                Num_of_wrong_relevant_labels INTEGER NOT NULL,
-                Num_of_all_classes INTEGER NOT NULL,
-                Num_of_correct_classes INTEGER NOT NULL,
-                Num_of_false_classes INTEGER NOT NULL,
-                Calc_Class_Crop INTEGER NOT NULL,
-                Calc_Class_Text INTEGER NOT NULL,
-                Calc_Class_Soil INTEGER NOT NULL,
-                Calc_Class_Coord INTEGER NOT NULL,
-                Real_Class_Crop INTEGER NOT NULL,
-                Real_Class_Text INTEGER NOT NULL,
-                Real_Class_Soil INTEGER NOT NULL,
-                Real_Class_Coord INTEGER NOT NULL,
-                KKR_Class_Crops FLOAT NOT NULL,
-                KKR_Class_Text FLOAT NOT NULL,
-                KKR_Class_Soil FLOAT NOT NULL,
-                KKR_Class_Coord FLOAT NOT NULL,
-                KKR_Class_All FLOAT NOT NULL,
-                Precision_Class FLOAT NOT NULL,
-                Recall_Class FLOAT NOT NULL,
-                FVal FLOAT NOT NULL,
+                Num_Of_All_Tokens INTEGER NOT NULL,
+                Num_Of_Correct_Labels INTEGER NOT NULL
+                Num_Of_All_Relevant_Tokens INTEGER NOT NULL,
+                Num_Of_All_Correct_Relevant_Labels INTEGER NOT NULL,
+                Crops_Real INTEGER NOT NULL,
+                Crops_TP INTEGER NOT NULL,
+                Crops_TN INTEGER NOT NULL,
+                Crops_FN INTEGER NOT NULL,
+                Crops_FP INTEGER NOT NULL,
+                Textures_Real INTEGER NOT NULL,
+                Texture_TP INTEGER NOT NULL,
+                Texture_TN INTEGER NOT NULL,
+                Texture_FN INTEGER NOT NULL,
+                Texture_FP INTEGER NOT NULL,
+                Soils_Real INTEGER NOT NULL,
+                Soils_TP INTEGER NOT NULL,
+                Soils_TN INTEGER NOT NULL,
+                Soils_FN INTEGER NOT NULL,
+                Soils_FP INTEGER NOT NULL,
+                Coords_Real INTEGER NOT NULL,
+                Coords_TP INTEGER NOT NULL,
+                Coords_TN INTEGER NOT NULL,
+                Coords_FN INTEGER NOT NULL,
+                Coords_FP INTEGER NOT NULL,
+                Crop_Prec FLOAT NOT NULL,
+                Crop_Recall FLOAT NOT NULL,
+                Crop_F FLOAT NOT NULL,
+                Texture_Prec FLOAT NOT NULL,
+                Texture_Recall FLOAT NOT NULL,
+                Texture_F FLOAT NOT NULL,
+                Soils_Prec FLOAT NOT NULL,
+                Soils_Recall FLOAT NOT NULL,
+                Soils_F FLOAT NOT NULL,
+                Coords_Prec FLOAT NOT NULL,
+                Coords_Recall FLOAT NOT NULL,
+                Coords_F FLOAT NOT NULL,
+                Mean_F FLOAT NOT NULL,
                 PRIMARY KEY(Name, Treshold, Datatype)
                 );"""
             Cur.execute(sql)
             Con.commit()
-        sql = "INSERT INTO TCF VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        sql = "INSERT INTO TCF VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         Cur.executemany(sql, results_list)
         Con.commit()
         Con.close()
