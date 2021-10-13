@@ -45,6 +45,8 @@ Coords_Class[3] = float(1)
 Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
 FittingData = []
 for Count, (ID, Filename, Par) in enumerate(OriginalPars):
+    if Count%100==0:
+        print(str(Count) + "  |  " + str(len(OriginalPars)))
     TokenizedPar = Tokenizer.tokenize(Par)
     if len(TokenizedPar) < 490:
         Labels = []
@@ -55,26 +57,29 @@ for Count, (ID, Filename, Par) in enumerate(OriginalPars):
         for Token in TokenizedPar:
             Labels.append(No_Class)
         for crop in Cropslist:
-            TokenCrop = Tokenizer.tokenize(crop)
-            for i in range(len(TokenizedPar)-len(TokenCrop)):
-                if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
-                    for j in range(len(TokenCrop)):
-                        Labels[i+j] = Crops_Class
-                    ParCrops.append(crop)
+            if crop in Par:
+                TokenCrop = Tokenizer.tokenize(crop)
+                for i in range(len(TokenizedPar)-len(TokenCrop)):
+                    if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
+                        for j in range(len(TokenCrop)):
+                            Labels[i+j] = Crops_Class
+                        ParCrops.append(crop)
         for texture in Texturelist:
-            TokenTexture = Tokenizer.tokenize(texture)
-            for i in range(len(TokenizedPar)-len(TokenTexture)):
-                if TokenizedPar[i:i+len(TokenTexture)] == TokenTexture:
-                    for j in range(len(TokenTexture)):
-                        Labels[i+j] = Texture_Class
-                    ParTexts.append(texture)
+            if texture in Par:
+                TokenTexture = Tokenizer.tokenize(texture)
+                for i in range(len(TokenizedPar)-len(TokenTexture)):
+                    if TokenizedPar[i:i+len(TokenTexture)] == TokenTexture:
+                        for j in range(len(TokenTexture)):
+                            Labels[i+j] = Texture_Class
+                        ParTexts.append(texture)
         for soil in Soillist:
-            TokenSoil = Tokenizer.tokenize(soil)
-            for i in range(len(TokenizedPar)-len(TokenSoil)):
-                if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
-                    for j in range(len(TokenSoil)):
-                        Labels[i+j] = Soils_Class
-                ParSoils.append(soil)
+            if soil in Par:
+                TokenSoil = Tokenizer.tokenize(soil)
+                for i in range(len(TokenizedPar)-len(TokenSoil)):
+                    if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
+                        for j in range(len(TokenSoil)):
+                            Labels[i+j] = Soils_Class
+                    ParSoils.append(soil)
         (Six, Eight, NF, E) = mc.find_coordinates(Par)
         Found_Coords = Six + Eight    
         for (PotCord, StringCord, Par) in Found_Coords:
@@ -220,7 +225,7 @@ for (Dater, DescriptorData) in Daten:
         print("Starting " + DescriptorData + " with treshold " + str(Treshold))
         Starttime = time.time()
         Classes_C1_R1 = {}
-        CLasses_C0_R1 = {}
+        Classes_C0_R1 = {}
         Classes_C1_R0 = {}
         Classes_C0_R0 = {}
         Num_Of_All_Tokens = 0
