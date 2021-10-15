@@ -135,7 +135,7 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
     for Count, DataOnlyTest in enumerate(TestData):
         if DataOnlyTest in TrainingData:
             Doubles.append(Count)
-    print("Found " + len(Doubles) + " errors in Testdata")
+    print("Found " + str(len(Doubles)) + " errors in Testdata")
     for cc in sorted(Doubles, reverse=True):
         del TestData[cc]
     
