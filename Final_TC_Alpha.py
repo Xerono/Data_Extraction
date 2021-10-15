@@ -19,201 +19,216 @@ Soillist = []
 with open(Soilfile, "r") as file:
     for line in file.readlines():
         Soillist.append(line.rstrip())   
-
-import sqlite3
-Database = Filepath + "Database.db"
-Con = sqlite3.connect(Database)
-Cur = Con.cursor()
-xs = "Select * FROM Pars"
-OriginalPars = Cur.execute(xs).fetchall()
-Con.close()
-
-# ID, Filename, Par
-import Module_Coordinates as mc
-from transformers import BertTokenizerFast
-num_labels = 4 # Crop, Soil, Texture, Coordinate
-Basemodel = "bert-base-cased"
-No_Class = [float(0), float(0), float(0), float(0)]
-Crops_Class = No_Class.copy()
-Crops_Class[0] = float(1)
-Texture_Class = No_Class.copy()
-Texture_Class[1] = float(1)
-Soils_Class = No_Class.copy()
-Soils_Class[2] = float(1)
-Coords_Class = No_Class.copy()
-Coords_Class[3] = float(1)
-Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
-FittingData = []
-for Count, (ID, Filename, Par) in enumerate(OriginalPars):
-    if Count%100==0:
-        print(str(Count) + "  |  " + str(len(OriginalPars)))
-    TokenizedPar = Tokenizer.tokenize(Par)
-    if len(TokenizedPar) < 490:
-        Labels = []
-        ParCrops = []
-        ParTexts = []
-        ParSoils = []
-        ParCords = []
-        for Token in TokenizedPar:
-            Labels.append(No_Class)
-        for crop in Cropslist:
-            if crop in Par:
-                TokenCrop = Tokenizer.tokenize(crop)
-                for i in range(len(TokenizedPar)-len(TokenCrop)):
-                    if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
-                        for j in range(len(TokenCrop)):
-                            Labels[i+j] = Crops_Class
-                        ParCrops.append(crop)
-        for texture in Texturelist:
-            if texture in Par:
-                TokenTexture = Tokenizer.tokenize(texture)
-                for i in range(len(TokenizedPar)-len(TokenTexture)):
-                    if TokenizedPar[i:i+len(TokenTexture)] == TokenTexture:
-                        for j in range(len(TokenTexture)):
-                            Labels[i+j] = Texture_Class
-                        ParTexts.append(texture)
-        for soil in Soillist:
-            if soil in Par:
-                TokenSoil = Tokenizer.tokenize(soil)
-                for i in range(len(TokenizedPar)-len(TokenSoil)):
-                    if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
-                        for j in range(len(TokenSoil)):
-                            Labels[i+j] = Soils_Class
-                    ParSoils.append(soil)
-        (Six, Eight, NF, E) = mc.find_coordinates(Par)
-        Found_Coords = Six + Eight    
-        for (PotCord, StringCord, Par) in Found_Coords:
-            TokenCord = Tokenizer.tokenize(StringCord)
-            for i in range(len(TokenizedPar)-len(TokenCord)):
-                if TokenizedPar[i:i+len(TokenCord)] == TokenCord:
-                    for j in range(len(TokenCord)):
-                        Labels[i+j] = Coords_Class
-            ParCords.append((StringCord, PotCord))
-        FittingData.append((Par, Labels, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
-
-print("Created Labels")
-Data_With_Things = []
-Data_Without_Things = []
-for (Par, Labels, (PC, PT, PS, PC2)) in FittingData:
-    if PC or PT or PS or PC2:
-        Data_With_Things.append((Par, Labels, (PC, PT, PS, PC2)))
-    else:
-        Data_Without_Things.append((Par, Labels, (PC, PT, PS, PC2)))
-
-TestPercentage = 90
-Randomseed = "Final_TC_Alpha"
-
-LenTraining = int(len(Data_With_Things)/100*TestPercentage)
-import random
-random.seed(Randomseed)
-TrainingData = Data_With_Things[:LenTraining]
-TestData = Data_With_Things[LenTraining:]
-import pickle
-with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
-    pickle.dump(TrainingData, file)
-with open(CurDir + "/Files/TCF_A_Test.pickle", "wb") as file:
-    pickle.dump(TestData, file)
-with open(CurDir + "/Files/TCF_A_All.pickle", "wb") as file:
-    pickle.dump(FittingData, file)
-
-    
-from transformers import AdamW
-from transformers import BertForTokenClassification
-from torch.utils.data import DataLoader
-import torch
-Learning_Rate = 5e-5
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
-optim = AdamW(Model.parameters(), lr=Learning_Rate)
-PadLength = 510
-DatasetLength = 10000 # 10000
-class Dataset(torch.utils.data.Dataset):
-    def __getitem__(self, idx):
-        random.shuffle(TrainingData)
-        Par_DS, Labels_DS, (ParCrops, ParTextures, ParSoils, ParCords) = TrainingData[0]
-        Labels_DS = Labels_DS.copy()
-        TokenizedPar_WithCLSandSEP = Tokenizer(Par_DS)
-        TokenizedPar = TokenizedPar_WithCLSandSEP['input_ids'][1:-1]
-        Attention_Mask = []
-        for i in range(len(Labels_DS)):
-            if Labels_DS[i] == No_Class and random.choice([1,2,3,4]) == 1:
-                    Attention_Mask.append(0)
-            else:
-                Attention_Mask.append(1)
-
-        for i in range(PadLength - len(TokenizedPar)):
-            TokenizedPar.append(0)
-            Labels_DS.append(No_Class)
-            Attention_Mask.append(0)
-        item = {}
-        item['input_ids'] = torch.tensor(TokenizedPar)
-        item['labels'] = torch.tensor(Labels_DS)
-        item['attention_mask'] = torch.tensor(Attention_Mask)
-        return item
-    def __len__(self):
-        return DatasetLength
-
-import time
-
-Batch_Size = 8
-Pos_Weight_Vector = torch.ones([num_labels])
-Training_Loader = DataLoader(Dataset(), batch_size = Batch_Size)
-BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = Pos_Weight_Vector).to(device)
-Loss_History = []
-Counter = 0
-Time_For_Batch = []
-Custom_Loss = 0
-Stoptime = 28800 # 28800
-Starttime = time.time()
-
-while time.time()-Starttime < Stoptime:
-    for batch in Training_Loader:
-        Batchstarttime = time.time()
-        optim.zero_grad()
-        input_ids = batch['input_ids'].to(device)
-        labels = batch['labels'].to(device)
-        att_mask = batch['attention_mask'].to(device)
-        Output = Model(input_ids, attention_mask = att_mask)
-        Logits = Output.logits
-        Loss = BCEWLL(Logits, labels)
-        lossnum = Loss.item()
-        Loss_History.append(lossnum)
-        Loss.backward()
-        optim.step()
-        if Counter % 1000 == 0:
-            print("Loss of " + str(round(lossnum, 6)) + " after " + str(Counter) + " batches, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
-        Counter += 1
-        Batchendtime = time.time()
-        Time_For_Batch.append(Batchendtime - Batchstarttime)
-Endtime = time.time()
-print("Finished Model")
-Fulltime = Endtime - Starttime
 ModName = "Alpha"
-Model.eval()
-Model.save_pretrained(CurDir + "/Models/" + ModName)
-HistoryOutputPlace = CurDir + "/Results/TCF_Loss/"
-if not os.path.isdir(HistoryOutputPlace):
-    os.mkdir(HistoryOutputPlace)
-with open(HistoryOutputPlace + "Alpha.pickle", "wb") as file:
-    pickle.dump(Loss_History, file)
-Parameters = {}
-Parameters["FullTime"] = Fulltime
-Parameters["Pos_Weight_Vector"] = Pos_Weight_Vector
-Parameters["Len_los_history"] = len(Loss_History)
-Parameters["Time_Per_Batch"] = Time_For_Batch
-Parameters["Basemodel"] = Basemodel
-Parameters["Randomseed"] = Randomseed
-Parameters["PadLength"] = PadLength
-Parameters["DatasetLength"] = DatasetLength
-Parameters["Stoptime"] = Stoptime
-Parameters["Batch_Size_Train"] = Batch_Size
-Parameters["Learning_Rate"] = Learning_Rate
-Parameters["Custom_Loss"] = Custom_Loss
-Parameters["TestPercentage"] = TestPercentage
-with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
-    pickle.dump(Parameters, file)
-print("Model " + ModName + " saved.")
+Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
+num_labels = 4 # Crop, Soil, Texture, Coordinate
+import torch
+from transformers import BertForTokenClassification
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import pickle
+import sqlite3
+if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle"):
+    
+    Database = Filepath + "Database.db"
+    Con = sqlite3.connect(Database)
+    Cur = Con.cursor()
+    xs = "Select * FROM Pars"
+    OriginalPars = Cur.execute(xs).fetchall()
+    Con.close()
 
+    # ID, Filename, Par
+    import Module_Coordinates as mc
+    from transformers import BertTokenizerFast
+    
+    Basemodel = "bert-base-cased"
+    No_Class = [float(0), float(0), float(0), float(0)]
+    Crops_Class = No_Class.copy()
+    Crops_Class[0] = float(1)
+    Texture_Class = No_Class.copy()
+    Texture_Class[1] = float(1)
+    Soils_Class = No_Class.copy()
+    Soils_Class[2] = float(1)
+    Coords_Class = No_Class.copy()
+    Coords_Class[3] = float(1)
+    
+    FittingData = []
+    for Count, (ID, Filename, Par) in enumerate(OriginalPars):
+        if Count%1000==0:
+            print(str(Count) + "  |  " + str(len(OriginalPars)))
+        TokenizedPar = Tokenizer.tokenize(Par)
+        if len(TokenizedPar) < 490:
+            Labels = []
+            ParCrops = []
+            ParTexts = []
+            ParSoils = []
+            ParCords = []
+            for Token in TokenizedPar:
+                Labels.append(No_Class)
+            for crop in Cropslist:
+                if crop in Par:
+                    TokenCrop = Tokenizer.tokenize(crop)
+                    for i in range(len(TokenizedPar)-len(TokenCrop)):
+                        if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
+                            for j in range(len(TokenCrop)):
+                                Labels[i+j] = Crops_Class
+                            ParCrops.append(crop)
+            for texture in Texturelist:
+                if texture in Par:
+                    TokenTexture = Tokenizer.tokenize(texture)
+                    for i in range(len(TokenizedPar)-len(TokenTexture)):
+                        if TokenizedPar[i:i+len(TokenTexture)] == TokenTexture:
+                            for j in range(len(TokenTexture)):
+                                Labels[i+j] = Texture_Class
+                            ParTexts.append(texture)
+            for soil in Soillist:
+                if soil in Par:
+                    TokenSoil = Tokenizer.tokenize(soil)
+                    for i in range(len(TokenizedPar)-len(TokenSoil)):
+                        if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
+                            for j in range(len(TokenSoil)):
+                                Labels[i+j] = Soils_Class
+                        ParSoils.append(soil)
+            (Six, Eight, NF, E) = mc.find_coordinates(Par)
+            Found_Coords = Six + Eight    
+            for (PotCord, StringCord, Par) in Found_Coords:
+                TokenCord = Tokenizer.tokenize(StringCord)
+                for i in range(len(TokenizedPar)-len(TokenCord)):
+                    if TokenizedPar[i:i+len(TokenCord)] == TokenCord:
+                        for j in range(len(TokenCord)):
+                            Labels[i+j] = Coords_Class
+                ParCords.append((StringCord, PotCord))
+            FittingData.append((Par, Labels, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
+
+    print("Created Labels")
+    Data_With_Things = []
+    Data_Without_Things = []
+    for (Par, Labels, (PC, PT, PS, PC2)) in FittingData:
+        if PC or PT or PS or PC2:
+            Data_With_Things.append((Par, Labels, (PC, PT, PS, PC2)))
+        else:
+            Data_Without_Things.append((Par, Labels, (PC, PT, PS, PC2)))
+
+    TestPercentage = 90
+    Randomseed = "Final_TC_Alpha"
+
+    LenTraining = int(len(Data_With_Things)/100*TestPercentage)
+    import random
+    random.seed(Randomseed)
+    TrainingData = Data_With_Things[:LenTraining]
+    TestData = Data_With_Things[LenTraining:]
+    
+    with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
+        pickle.dump(TrainingData, file)
+    with open(CurDir + "/Files/TCF_A_Test.pickle", "wb") as file:
+        pickle.dump(TestData, file)
+    with open(CurDir + "/Files/TCF_A_All.pickle", "wb") as file:
+        pickle.dump(FittingData, file)
+
+        
+    from transformers import AdamW
+    
+    from torch.utils.data import DataLoader
+    
+    Learning_Rate = 5e-5
+    
+    Model = BertForTokenClassification.from_pretrained(Basemodel, num_labels=num_labels).to(device)
+    optim = AdamW(Model.parameters(), lr=Learning_Rate)
+    PadLength = 510
+    DatasetLength = 10000 # 10000
+    class Dataset(torch.utils.data.Dataset):
+        def __getitem__(self, idx):
+            random.shuffle(TrainingData)
+            Par_DS, Labels_DS, (ParCrops, ParTextures, ParSoils, ParCords) = TrainingData[0]
+            Labels_DS = Labels_DS.copy()
+            TokenizedPar_WithCLSandSEP = Tokenizer(Par_DS)
+            TokenizedPar = TokenizedPar_WithCLSandSEP['input_ids'][1:-1]
+            Attention_Mask = []
+            for i in range(len(Labels_DS)):
+                if Labels_DS[i] == No_Class and random.choice([1,2,3,4]) == 1:
+                        Attention_Mask.append(0)
+                else:
+                    Attention_Mask.append(1)
+
+            for i in range(PadLength - len(TokenizedPar)):
+                TokenizedPar.append(0)
+                Labels_DS.append(No_Class)
+                Attention_Mask.append(0)
+            item = {}
+            item['input_ids'] = torch.tensor(TokenizedPar)
+            item['labels'] = torch.tensor(Labels_DS)
+            item['attention_mask'] = torch.tensor(Attention_Mask)
+            return item
+        def __len__(self):
+            return DatasetLength
+
+    import time
+
+    Batch_Size = 8
+    Pos_Weight_Vector = torch.ones([num_labels])
+    Training_Loader = DataLoader(Dataset(), batch_size = Batch_Size)
+    BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = Pos_Weight_Vector).to(device)
+    Loss_History = []
+    Counter = 0
+    Time_For_Batch = []
+    Custom_Loss = 0
+    Stoptime = 28800 # 28800
+    Starttime = time.time()
+
+    while time.time()-Starttime < Stoptime:
+        for batch in Training_Loader:
+            Batchstarttime = time.time()
+            optim.zero_grad()
+            input_ids = batch['input_ids'].to(device)
+            labels = batch['labels'].to(device)
+            att_mask = batch['attention_mask'].to(device)
+            Output = Model(input_ids, attention_mask = att_mask)
+            Logits = Output.logits
+            Loss = BCEWLL(Logits, labels)
+            lossnum = Loss.item()
+            Loss_History.append(lossnum)
+            Loss.backward()
+            optim.step()
+            if Counter % 1000 == 0:
+                print("Loss of " + str(round(lossnum, 6)) + " after " + str(Counter) + " batches, " + str(round(time.time() - Starttime, 2)) + "/" + str(Stoptime) + " seconds)")
+            Counter += 1
+            Batchendtime = time.time()
+            Time_For_Batch.append(Batchendtime - Batchstarttime)
+    Endtime = time.time()
+    print("Finished Model")
+    Fulltime = Endtime - Starttime
+
+    Model.eval()
+    Model.save_pretrained(CurDir + "/Models/" + ModName)
+    HistoryOutputPlace = CurDir + "/Results/TCF_Loss/"
+    if not os.path.isdir(HistoryOutputPlace):
+        os.mkdir(HistoryOutputPlace)
+    with open(HistoryOutputPlace + "Alpha.pickle", "wb") as file:
+        pickle.dump(Loss_History, file)
+    Parameters = {}
+    Parameters["FullTime"] = Fulltime
+    Parameters["Pos_Weight_Vector"] = Pos_Weight_Vector
+    Parameters["Len_los_history"] = len(Loss_History)
+    Parameters["Time_Per_Batch"] = Time_For_Batch
+    Parameters["Basemodel"] = Basemodel
+    Parameters["Randomseed"] = Randomseed
+    Parameters["PadLength"] = PadLength
+    Parameters["DatasetLength"] = DatasetLength
+    Parameters["Stoptime"] = Stoptime
+    Parameters["Batch_Size_Train"] = Batch_Size
+    Parameters["Learning_Rate"] = Learning_Rate
+    Parameters["Custom_Loss"] = Custom_Loss
+    Parameters["TestPercentage"] = TestPercentage
+    with open(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle", "wb") as file:
+        pickle.dump(Parameters, file)
+    print("Model " + ModName + " saved.")
+else:
+    Model = BertForTokenClassification.from_pretrained(CurDir + "/Models/" + ModName, num_labels=num_labels).to(device)
+    with open(CurDir + "/Files/TCF_A_Training.pickle", "rb") as file:
+        TrainingData = pickle.load(file)
+    with open(CurDir + "/Files/TCF_A_Test.pickle", "rb") as file:
+        TestData = pickle.load(file)
+    with open(CurDir + "/Files/TCF_A_All.pickle", "wb") as file:
+        FittingData = pickle.load(file)
 Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99), float(0.999), float(0.9999), float(0.99999), float(0.999999)]
 Daten = [(TrainingData, "Train"), (TestData, "Test"), (FittingData, "All")]
 
@@ -339,7 +354,7 @@ for (Dater, DescriptorData) in Daten:
                 Datatype String NOT NULL,
                 Time FLOAT NOT NULL,
                 Num_Of_All_Tokens INTEGER NOT NULL,
-                Num_Of_Correct_Labels INTEGER NOT NULL
+                Num_Of_Correct_Labels INTEGER NOT NULL,
                 Num_Of_All_Relevant_Tokens INTEGER NOT NULL,
                 Num_Of_All_Correct_Relevant_Labels INTEGER NOT NULL,
                 Crops_Real INTEGER NOT NULL,
@@ -383,3 +398,4 @@ for (Dater, DescriptorData) in Daten:
         Cur.executemany(sql, results_list)
         Con.commit()
         Con.close()
+print("Finished")
