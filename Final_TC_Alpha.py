@@ -136,10 +136,8 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
         if DataOnlyTest in TrainingData:
             Doubles.append(Count)
     print("Found " + len(Doubles) + " errors in Testdata")
-    for cc in sorted(Count, reverse=True):
+    for cc in sorted(Doubles, reverse=True):
         del TestData[cc]
-    print("dddd")
-    input()
     
     with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
         pickle.dump(TrainingData, file)
