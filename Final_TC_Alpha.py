@@ -20,6 +20,7 @@ with open(Soilfile, "r") as file:
     for line in file.readlines():
         Soillist.append(line.rstrip())   
 ModName = "Alpha"
+from transformers import BertTokenizerFast
 Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
 num_labels = 4 # Crop, Soil, Texture, Coordinate
 import torch
@@ -27,7 +28,7 @@ from transformers import BertForTokenClassification
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import pickle
 import sqlite3
-if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle"):
+if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle"):
     
     Database = Filepath + "Database.db"
     Con = sqlite3.connect(Database)
@@ -38,7 +39,7 @@ if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pic
 
     # ID, Filename, Par
     import Module_Coordinates as mc
-    from transformers import BertTokenizerFast
+    
     
     Basemodel = "bert-base-cased"
     No_Class = [float(0), float(0), float(0), float(0)]
@@ -50,10 +51,10 @@ if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pic
     Soils_Class[2] = float(1)
     Coords_Class = No_Class.copy()
     Coords_Class[3] = float(1)
-    
+    import re
     FittingData = []
     for Count, (ID, Filename, Par) in enumerate(OriginalPars):
-        if Count%1000==0:
+        if Count%10000==0:
             print(str(Count) + "  |  " + str(len(OriginalPars)))
         TokenizedPar = Tokenizer.tokenize(Par)
         if len(TokenizedPar) < 490:
@@ -65,29 +66,41 @@ if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pic
             for Token in TokenizedPar:
                 Labels.append(No_Class)
             for crop in Cropslist:
-                if crop in Par:
-                    TokenCrop = Tokenizer.tokenize(crop)
+                Cropsfound = [Found.start() for Found in re.finditer(crop.lower(), Par.lower())]
+                for StartingCrop in Cropsfound:
+                    TokenCrop = Tokenizer.tokenize(Par[StartingCrop] + crop[1:]) # "Wheat" -> ["W", "##heat"], "wheat" -> ["wheat"]
                     for i in range(len(TokenizedPar)-len(TokenCrop)):
                         if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
-                            for j in range(len(TokenCrop)):
-                                Labels[i+j] = Crops_Class
-                            ParCrops.append(crop)
-            for texture in Texturelist:
-                if texture in Par:
-                    TokenTexture = Tokenizer.tokenize(texture)
-                    for i in range(len(TokenizedPar)-len(TokenTexture)):
-                        if TokenizedPar[i:i+len(TokenTexture)] == TokenTexture:
-                            for j in range(len(TokenTexture)):
-                                Labels[i+j] = Texture_Class
-                            ParTexts.append(texture)
+                            if TokenizedPar[i+len(TokenCrop)][0] != "#": # No "rosette" for rose
+                                for j in range(len(TokenCrop)):
+                                    Labels[i+j] = Crops_Class
+                                ParCrops.append(Par[StartingCrop] + crop[1:])
+
             for soil in Soillist:
-                if soil in Par:
-                    TokenSoil = Tokenizer.tokenize(soil)
+                Soilsfound = [Found.start() for Found in re.finditer(soil.lower(), Par.lower())]
+                for StartingSoil in Soilsfound:
+                    TokenSoil = Tokenizer.tokenize(Par[StartingSoil] + soil[1:])
                     for i in range(len(TokenizedPar)-len(TokenSoil)):
                         if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
-                            for j in range(len(TokenSoil)):
-                                Labels[i+j] = Soils_Class
-                        ParSoils.append(soil)
+                            if TokenizedPar[i+len(TokenSoil)][0] != "#":
+                                for j in range(len(TokenSoil)):
+                                    Labels[i+j] = Soils_Class
+                                ParSoils.append(Par[StartingSoil] + soil[1:])
+
+
+            for texture in Texturelist:
+                Texturesfound = [Found.start() for Found in re.finditer(texture.lower(), Par.lower())]
+                for StartingText in Texturesfound:
+                    TokenText = Tokenizer.tokenize(Par[StartingText] + texture[1:])
+                    for i in range(len(TokenizedPar)-len(TokenText)):
+                        if TokenizedPar[i:i+len(TokenText)] == TokenText:
+                            if TokenizedPar[i+len(TokenText)][0] != "#":
+                                for j in range(len(TokenText)):
+                                    Labels[i+j] = Texture_Class
+                                ParTexts.append(Par[StartingText] + texture[1:])
+
+
+
             (Six, Eight, NF, E) = mc.find_coordinates(Par)
             Found_Coords = Six + Eight    
             for (PotCord, StringCord, Par) in Found_Coords:
@@ -96,7 +109,7 @@ if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pic
                     if TokenizedPar[i:i+len(TokenCord)] == TokenCord:
                         for j in range(len(TokenCord)):
                             Labels[i+j] = Coords_Class
-                ParCords.append((StringCord, PotCord))
+                        ParCords.append((StringCord, PotCord))
             FittingData.append((Par, Labels, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
 
     print("Created Labels")
@@ -116,6 +129,17 @@ if not os.path.file.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pic
     random.seed(Randomseed)
     TrainingData = Data_With_Things[:LenTraining]
     TestData = Data_With_Things[LenTraining:]
+
+    # Secure Testdata is unique
+    Doubles = []
+    for Count, DataOnlyTest in enumerate(TestData):
+        if DataOnlyTest in TrainingData:
+            Doubles.append(Count)
+    print("Found " + len(Doubles) + " errors in Testdata")
+    for cc in sorted(Count, reverse=True):
+        del TestData[cc]
+    print("dddd")
+    input()
     
     with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
         pickle.dump(TrainingData, file)
@@ -227,7 +251,7 @@ else:
         TrainingData = pickle.load(file)
     with open(CurDir + "/Files/TCF_A_Test.pickle", "rb") as file:
         TestData = pickle.load(file)
-    with open(CurDir + "/Files/TCF_A_All.pickle", "wb") as file:
+    with open(CurDir + "/Files/TCF_A_All.pickle", "rb") as file:
         FittingData = pickle.load(file)
 Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99), float(0.999), float(0.9999), float(0.99999), float(0.999999)]
 Daten = [(TrainingData, "Train"), (TestData, "Test"), (FittingData, "All")]
@@ -259,7 +283,7 @@ for (Dater, DescriptorData) in Daten:
         Num_Of_Labels_With_n_Ones[4] = 0
         for CountAna, (Par_Aus, Labels_Aus, (ParCrops, ParTextures, ParSoils, ParCords)) in enumerate(Dater):
             if CountAna%1000==0:
-                print(str(CountAna) + "/" + str(len(Dater)))
+                print(Descriptordata + " - " + str(Treshold) + " | " + str(CountAna) + "/" + str(len(Dater)))
             Labels_Aus = Labels_Aus.copy()
             Par_Aus = str(Par_Aus)
             Calc_Labels_Par = []
