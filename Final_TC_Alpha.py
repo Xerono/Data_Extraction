@@ -18,7 +18,8 @@ with open(Texturefile, "r") as file:
 Soillist = []
 with open(Soilfile, "r") as file:
     for line in file.readlines():
-        Soillist.append(line.rstrip())   
+        Soillist.append(line.rstrip())
+import time
 ModName = "Alpha"
 from transformers import BertTokenizerFast
 Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
@@ -183,7 +184,7 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
         def __len__(self):
             return DatasetLength
 
-    import time
+    
 
     Batch_Size = 8
     Pos_Weight_Vector = torch.ones([num_labels])
