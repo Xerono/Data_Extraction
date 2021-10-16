@@ -138,7 +138,7 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
     print("Found " + str(len(Doubles)) + " errors in Testdata")
     for cc in sorted(Doubles, reverse=True):
         del TestData[cc]
-    
+    print("Files still in testdata: " + str(len(TestData)))
     with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
         pickle.dump(TrainingData, file)
     with open(CurDir + "/Files/TCF_A_Test.pickle", "wb") as file:
@@ -281,7 +281,7 @@ for (Dater, DescriptorData) in Daten:
         Num_Of_Labels_With_n_Ones[4] = 0
         for CountAna, (Par_Aus, Labels_Aus, (ParCrops, ParTextures, ParSoils, ParCords)) in enumerate(Dater):
             if CountAna%1000==0:
-                print(Descriptordata + " - " + str(Treshold) + " | " + str(CountAna) + "/" + str(len(Dater)))
+                print(DescriptorData + " - " + str(Treshold) + " | " + str(CountAna) + "/" + str(len(Dater)))
             Labels_Aus = Labels_Aus.copy()
             Par_Aus = str(Par_Aus)
             Calc_Labels_Par = []
