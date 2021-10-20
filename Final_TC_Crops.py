@@ -3,24 +3,7 @@ import os
 CurDir = os.getcwd()
 Filepath =  CurDir + "/Files/"
 
-Cropsfile = Filepath + "Cropslist.txt"
-Texturefile = Filepath + "Texturelist.txt"
-Soilfile = Filepath + "Soillist.txt"
-
-Cropslist = []
-with open(Cropsfile, "r") as file:
-    for line in file.readlines():
-        Cropslist.append(line.rstrip())
-Texturelist = []
-with open(Texturefile, "r") as file:
-    for line in file.readlines():
-        Texturelist.append(line.rstrip())
-Soillist = []
-with open(Soilfile, "r") as file:
-    for line in file.readlines():
-        Soillist.append(line.rstrip())
-import time
-ModName = "Alpha"
+ModName = "Crops"
 from transformers import BertTokenizerFast
 Tokenizer = BertTokenizerFast.from_pretrained(os.getcwd() + "/Custom_Tokenizer/")
 num_labels = 4 # Crop, Soil, Texture, Coordinate
@@ -30,13 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import pickle
 import sqlite3
 if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle"):
-    
-    Database = Filepath + "Database.db"
-    Con = sqlite3.connect(Database)
-    Cur = Con.cursor()
-    xs = "Select * FROM Pars"
-    OriginalPars = Cur.execute(xs).fetchall()
-    Con.close()
+
 
     # ID, Filename, Par
     import Module_Coordinates as mc
@@ -46,108 +23,50 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
     No_Class = [float(0), float(0), float(0), float(0)]
     Crops_Class = No_Class.copy()
     Crops_Class[0] = float(1)
-    Texture_Class = No_Class.copy()
-    Texture_Class[1] = float(1)
-    Soils_Class = No_Class.copy()
-    Soils_Class[2] = float(1)
-    Coords_Class = No_Class.copy()
-    Coords_Class[3] = float(1)
-    import re
-    FittingData = []
-    for Count, (ID, Filename, Par) in enumerate(OriginalPars):
-        if Count%10000==0:
-            print(str(Count) + "  |  " + str(len(OriginalPars)))
-        TokenizedPar = Tokenizer.tokenize(Par)
-        if len(TokenizedPar) < 490:
-            Labels = []
-            ParCrops = []
-            ParTexts = []
-            ParSoils = []
-            ParCords = []
-            for Token in TokenizedPar:
-                Labels.append(No_Class)
-            for crop in Cropslist:
-                Cropsfound = [Found.start() for Found in re.finditer(crop.lower(), Par.lower())]
-                for StartingCrop in Cropsfound:
-                    TokenCrop = Tokenizer.tokenize(Par[StartingCrop] + crop[1:]) # "Wheat" -> ["W", "##heat"], "wheat" -> ["wheat"]
-                    for i in range(len(TokenizedPar)-len(TokenCrop)):
-                        if TokenizedPar[i:i+len(TokenCrop)] == TokenCrop:
-                            if TokenizedPar[i+len(TokenCrop)][0] != "#": # No "rosette" for rose
-                                for j in range(len(TokenCrop)):
-                                    Labels[i+j] = Crops_Class
-                                ParCrops.append(Par[StartingCrop] + crop[1:])
 
-            for soil in Soillist:
-                Soilsfound = [Found.start() for Found in re.finditer(soil.lower(), Par.lower())]
-                for StartingSoil in Soilsfound:
-                    TokenSoil = Tokenizer.tokenize(Par[StartingSoil] + soil[1:])
-                    for i in range(len(TokenizedPar)-len(TokenSoil)):
-                        if TokenizedPar[i:i+len(TokenSoil)] == TokenSoil:
-                            if TokenizedPar[i+len(TokenSoil)][0] != "#":
-                                for j in range(len(TokenSoil)):
-                                    Labels[i+j] = Soils_Class
-                                ParSoils.append(Par[StartingSoil] + soil[1:])
-
-
-            for texture in Texturelist:
-                Texturesfound = [Found.start() for Found in re.finditer(texture.lower(), Par.lower())]
-                for StartingText in Texturesfound:
-                    TokenText = Tokenizer.tokenize(Par[StartingText] + texture[1:])
-                    for i in range(len(TokenizedPar)-len(TokenText)):
-                        if TokenizedPar[i:i+len(TokenText)] == TokenText:
-                            if TokenizedPar[i+len(TokenText)][0] != "#":
-                                for j in range(len(TokenText)):
-                                    Labels[i+j] = Texture_Class
-                                ParTexts.append(Par[StartingText] + texture[1:])
-
-
-
-            (Six, Eight, NF, E) = mc.find_coordinates(Par)
-            Found_Coords = Six + Eight    
-            for (PotCord, StringCord, Par) in Found_Coords:
-                TokenCord = Tokenizer.tokenize(StringCord)
-                for i in range(len(TokenizedPar)-len(TokenCord)):
-                    if TokenizedPar[i:i+len(TokenCord)] == TokenCord:
-                        for j in range(len(TokenCord)):
-                            Labels[i+j] = Coords_Class
-                        ParCords.append((StringCord, PotCord))
-            FittingData.append((Par, Labels, (list(set(ParCrops)), list(set(ParTexts)), list(set(ParSoils)), ParCords)))
-
-    print("Created Labels")
-    Data_With_Things = []
-    Data_Without_Things = []
-    for (Par, Labels, (PC, PT, PS, PC2)) in FittingData:
-        if PC or PT or PS or PC2:
-            Data_With_Things.append((Par, Labels, (PC, PT, PS, PC2)))
-        else:
-            Data_Without_Things.append((Par, Labels, (PC, PT, PS, PC2)))
 
     TestPercentage = 90
     Randomseed = "Final_TC_Alpha"
 
-    LenTraining = int(len(Data_With_Things)/100*TestPercentage)
     import random
     random.seed(Randomseed)
-    TrainingData = Data_With_Things[:LenTraining]
-    TestData = Data_With_Things[LenTraining:]
 
-    # Secure Testdata is unique
-    Doubles = []
-    for Count, DataOnlyTest in enumerate(TestData):
-        if DataOnlyTest in TrainingData:
-            Doubles.append(Count)
-    print("Found " + str(len(Doubles)) + " errors in Testdata")
-    for cc in sorted(Doubles, reverse=True):
-        del TestData[cc]
-    print("Files still in testdata: " + str(len(TestData)))
-    with open(CurDir + "/Files/TCF_A_Training.pickle", "wb") as file:
+    with open(CurDir + "/Files/TCF_A_Training.pickle", "rb") as file:
+        TrainingDataOriginal = pickle.load(file)
+    with open(CurDir + "/Files/TCF_A_Test.pickle", "rb") as file:
+        TestDataOriginal = pickle.load(file)
+    with open(CurDir + "/Files/TCF_A_All.pickle", "rb") as file:
+        FittingDataOriginal = pickle.load(file)
+    TrainingData = []
+    TestData = []
+    FittingData = []
+    OriginalData = [(TrainingDataOriginal, "Train"), (TestDataOriginal, "Test"), (FittingDataOriginal, "All")]
+    for (oData, oDType) in OriginalData:
+        for Par_Orig, Labels_Orig, (ParCrops, ParTextures, ParSoils, ParCords) in oData:
+            Labels = []
+            for Label in Labels_Orig:
+                if Label == No_Class or Label == Crops_Class:
+                    Labels.append(Label)
+                else:
+                    Labels.append(No_Class)
+            if oDType == "Train":
+                TrainingData.append(Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords))
+            else:
+                if oDType == "Test":
+                    TestData.append(Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords))
+                else:
+                    if oDType == "All":
+                        FittingData.append(Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords))
+                    else:
+                        print("Error in Label correction")
+                        print(oDType)
+                        input()
+    with open(CurDir + "/Files/TCF_Crops_Training.pickle", "wb") as file:
         pickle.dump(TrainingData, file)
-    with open(CurDir + "/Files/TCF_A_Test.pickle", "wb") as file:
+    with open(CurDir + "/Files/TCF_Crops_Test.pickle", "wb") as file:
         pickle.dump(TestData, file)
-    with open(CurDir + "/Files/TCF_A_All.pickle", "wb") as file:
-        pickle.dump(FittingData, file)
-
-        
+    with open(CurDir + "/Files/TCF_Crops_All.pickle", "wb") as file:
+        pickle.dump(FittingData, file)                        
     from transformers import AdamW
     
     from torch.utils.data import DataLoader
@@ -246,11 +165,11 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
     print("Model " + ModName + " saved.")
 else:
     Model = BertForTokenClassification.from_pretrained(CurDir + "/Models/" + ModName, num_labels=num_labels).to(device)
-    with open(CurDir + "/Files/TCF_A_Training.pickle", "rb") as file:
+    with open(CurDir + "/Files/TCF_Crops_Training.pickle", "rb") as file:
         TrainingData = pickle.load(file)
-    with open(CurDir + "/Files/TCF_A_Test.pickle", "rb") as file:
+    with open(CurDir + "/Files/TCF_Crops_Test.pickle", "rb") as file:
         TestData = pickle.load(file)
-    with open(CurDir + "/Files/TCF_A_All.pickle", "rb") as file:
+    with open(CurDir + "/Files/TCF_Crops_All.pickle", "rb") as file:
         FittingData = pickle.load(file)
 Tresholds = [float(0.4), float(0.5), float(0.6), float(0.7), float(0.8), float(0.9), float(0.95), float(0.99), float(0.999), float(0.9999), float(0.99999), float(0.999999)]
 Daten = [(TrainingData, "Train"), (TestData, "Test"), (FittingData, "All")]

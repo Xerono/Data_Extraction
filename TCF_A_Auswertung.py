@@ -8,6 +8,8 @@ import pickle
 
 CurDir = os.getcwd()
 No_Class = [float(0), float(0), float(0), float(0)]
+CoordClass = No_Class.copy()
+CoordClass[3] = float(1)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 num_labels = 4
 Model = BertForTokenClassification.from_pretrained(CurDir + "/Models/Alpha", num_labels=num_labels).to(device)
@@ -29,7 +31,8 @@ UnintPars = bool(input())
 print("Show only testdata?")
 OnlyTest = bool(input())
 
-
+print("Show only coords?")
+OnlyCoords = bool(input())
 
 
 if OnlyTest:
@@ -47,6 +50,7 @@ for Entry in DataToLookAt:
     StrEnc = Tokenizer(Par_Aus, return_tensors="pt").to(device)
     Output = Model(**StrEnc)
     Logits = Output.logits[0][1:-1].sigmoid()
+    SomethingFound = []
     for i in range(len(Labels_Aus)):
         Current_Token = TokenizedPar[i]
         Current_Logits = Logits[i]
@@ -59,27 +63,50 @@ for Entry in DataToLookAt:
         Calc_Labels_Par.append(Calc_Label)
     for lbls in Calc_Labels_Par:
         if lbls != No_Class:
-            SomethingFound = True
-        else:
-            SomethingFound = False
-    if (UnintPars or ParCrops or ParTextures or ParSoils or ParCords or SomethingFound):
-        print(Par_Aus)
-        print()
-        print("Crops: " + str(ParCrops))
-        print("Textures: " + str(ParTextures))
-        print("Soils: " + str(ParSoils))
-        print("Coords: " + str(ParCords))
-        print()
-        if Entry in TrainingData:
-            print("Trainingdata")
-        if Entry in TestData:
-            print("Testdata")
-        if Entry not in TrainingData and Entry not in TestData:
-            print("Neither training nor test")
-        print("Found labels:")
-        for i in range(len(Calc_Labels_Par)):
-            if Calc_Labels_Par[i] != No_Class:
-                print(str(Calc_Labels_Par[i]) + " | " + str(TokenizedPar[i]))
-        print("_______________________________________")
-        print()
-        input()
+            SomethingFound.append(lbls)
+            
+
+    if OnlyCoords:
+        if UnintPars or ParCords or (CoordClass in SomethingFound):
+            print(Par_Aus)
+            print()
+            print("Crops: " + str(ParCrops))
+            print("Textures: " + str(ParTextures))
+            print("Soils: " + str(ParSoils))
+            print("Coords: " + str(ParCords))
+            print()
+            if Entry in TrainingData:
+                print("Trainingdata")
+            if Entry in TestData:
+                print("Testdata")
+            if Entry not in TrainingData and Entry not in TestData:
+                print("Neither training nor test")
+            print("Found labels:")
+            for i in range(len(Calc_Labels_Par)):
+                if Calc_Labels_Par[i] != No_Class:
+                    print(str(Calc_Labels_Par[i]) + " | " + str(TokenizedPar[i]))
+            print("_______________________________________")
+            print()
+            input()
+    else:
+        if (UnintPars or ParCrops or ParTextures or ParSoils or ParCords or SomethingFound):
+            print(Par_Aus)
+            print()
+            print("Crops: " + str(ParCrops))
+            print("Textures: " + str(ParTextures))
+            print("Soils: " + str(ParSoils))
+            print("Coords: " + str(ParCords))
+            print()
+            if Entry in TrainingData:
+                print("Trainingdata")
+            if Entry in TestData:
+                print("Testdata")
+            if Entry not in TrainingData and Entry not in TestData:
+                print("Neither training nor test")
+            print("Found labels:")
+            for i in range(len(Calc_Labels_Par)):
+                if Calc_Labels_Par[i] != No_Class:
+                    print(str(Calc_Labels_Par[i]) + " | " + str(TokenizedPar[i]))
+            print("_______________________________________")
+            print()
+            input()
