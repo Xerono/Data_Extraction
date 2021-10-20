@@ -50,13 +50,13 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
                 else:
                     Labels.append(No_Class)
             if oDType == "Train":
-                TrainingData.append(Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords))
+                TrainingData.append((Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords)))
             else:
                 if oDType == "Test":
-                    TestData.append(Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords))
+                    TestData.append((Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords)))
                 else:
                     if oDType == "All":
-                        FittingData.append(Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords))
+                        FittingData.append((Par_Orig, Labels, (ParCrops, ParTextures, ParSoils, ParCords)))
                     else:
                         print("Error in Label correction")
                         print(oDType)
