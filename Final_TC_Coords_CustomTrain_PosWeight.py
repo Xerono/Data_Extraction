@@ -114,7 +114,7 @@ if not os.path.exists(CurDir + "/Models/" + ModName + "/" + "Parameters.pickle")
     
 
     Batch_Size = 8
-    Pos_Weight_Vector = [0, 0, 0, (Weights[0] + Weights[1])/Weights[0])]
+    Pos_Weight_Vector = [0, 0, 0, ((Weights[0] + Weights[1])/Weights[0])]
     print(Pos_Weight_Vector)
     Training_Loader = DataLoader(Dataset(), batch_size = Batch_Size)
     BCEWLL = torch.nn.BCEWithLogitsLoss(pos_weight = torch.tensor(Pos_Weight_Vector)).to(device)
