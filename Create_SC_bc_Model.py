@@ -17,8 +17,8 @@ for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
     #   NumOfEpochs
     #   Batch Size
 
-    NumOfEpochs = 3
-    Batch_Size_Train = 8
+    NumOfEpochs = 6
+    Batch_Size_Train = 4
 
 
     # Variables for Traning/Testset creation:
@@ -118,11 +118,11 @@ for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
             Test_Label.append(Label)
 
     # Tokenization
-
-
+    import torch
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     from transformers import BertTokenizerFast
-    Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel)
+    Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel).to(device)
 
     Train_Encodings = Tokenizer(Training_Text, padding = True)
     Test_Encodings = Tokenizer(Test_Text, padding = True)
@@ -130,7 +130,7 @@ for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
 
     # Datasettype
 
-    import torch
+    
 
     class Datasetloader(torch.utils.data.Dataset):
         def __init__(self, encodings, labels):
@@ -164,7 +164,7 @@ for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
         logging_dir= CurDir + '/Results/Logs/',            # directory for storing logs
         logging_steps=10,
     )
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     model = BertForSequenceClassification.from_pretrained(PreTrainedModel).to(device)
 
     trainer = Trainer(
