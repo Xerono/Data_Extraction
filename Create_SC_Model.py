@@ -71,7 +71,7 @@ LongPars = []
 def remove_soils(FPID, Par):
     rpar = Par
     Soils = Paragraphs[FPID]
-    for (Soil, SoilD) in Par:
+    for (Soil, SoilD) in Soils:
         soil = Soil.lower()
         soilD = SoilD.lower()
         rpar = rpar.replace(soil, "")

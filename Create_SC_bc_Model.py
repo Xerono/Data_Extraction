@@ -9,7 +9,6 @@
 
 for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
 
-
     PreTrainedModel = "bert-base-cased"
     Maxlength = 917
 
@@ -71,7 +70,7 @@ for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
     def remove_soils(FPID, Par):
         rpar = Par
         Soils = Paragraphs[FPID]
-        for (Soil, SoilD) in Par:
+        for (Soil, SoilD) in Soils:
             soil = Soil.lower()
             soilD = SoilD.lower()
             rpar = rpar.replace(soil, "")
@@ -182,4 +181,4 @@ for ModelType in ["Soils_bc", "Soilless_bc", "Coordinates_bc"]:
     ModName = "SC_Model_" + ModelType + "/"
 
     model.save_pretrained(CurDir + "/Models/" + ModName)
-    print("Saved model")
+    print("Saved model " + ModelType)
