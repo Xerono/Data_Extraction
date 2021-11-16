@@ -120,8 +120,8 @@ for ModelType in ["Soils_dc", "Soilless_dc", "Coordinates_dc"]:
     import torch
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    from transformers import BertTokenizerFast
-    Tokenizer = BertTokenizerFast.from_pretrained(PreTrainedModel).to(device)
+    from transformers import DistilBertTokenizerFast
+    Tokenizer = DistilBertTokenizerFast.from_pretrained(PreTrainedModel)
 
     Train_Encodings = Tokenizer(Training_Text, padding = True)
     Test_Encodings = Tokenizer(Test_Text, padding = True)
