@@ -12,6 +12,7 @@ Batch2 = []
 Batch3 = []
 Batch4 = []
 Batches = [Batch1, Batch2, Batch3, Batch4]
+
 Ends = []
 Fronts = []
 for i in Vars:
@@ -112,7 +113,6 @@ import Create_TC7_Model as NewTC7Model
 import Use_TC7_Model as UseTC7Model
 for Paras in ThisBatch:
     print(Paras)
-    input()
     for cust_Tok in [True, False]:
         NewTC7Model.create(tuple(Paras), cust_Tok)
         for trsh in Tresholds:

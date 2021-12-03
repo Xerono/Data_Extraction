@@ -149,7 +149,7 @@ for ModelType in ["Soils_dc", "Soilless_dc", "Coordinates_dc"]:
 
     # Training
 
-    from transformers import BertForSequenceClassification, Trainer, TrainingArguments
+    from transformers import DistilBertForSequenceClassification, Trainer, TrainingArguments
 
     Batch_Size_Eval = Batch_Size_Train
 
@@ -164,7 +164,7 @@ for ModelType in ["Soils_dc", "Soilless_dc", "Coordinates_dc"]:
         logging_steps=10,
     )
     
-    model = BertForSequenceClassification.from_pretrained(PreTrainedModel).to(device)
+    model = DistilBertForSequenceClassification.from_pretrained(PreTrainedModel).to(device)
 
     trainer = Trainer(
         model=model,                         # the instantiated 🤗 Transformers model to be trained
